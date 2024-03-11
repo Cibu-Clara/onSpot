@@ -4,13 +4,12 @@ import android.annotation.SuppressLint
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavController
 import com.example.parkingspots.ui.theme.purple
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun HomeScreen(
-    navController: NavController
+    //navController: NavController
 ) {
     Scaffold(
         bottomBar = {
