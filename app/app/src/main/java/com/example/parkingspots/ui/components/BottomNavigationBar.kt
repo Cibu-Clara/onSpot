@@ -38,7 +38,7 @@ fun BottomNavigationBar(
     onItemSelected: (Int) -> Unit
 ) {
     val items = listOf(
-        BottomNavigationItem("My Posts", Icons.Filled.Menu, Icons.Outlined.Menu, false, route = Screens.PostsScreen.route),
+        BottomNavigationItem("Posts", Icons.Filled.Menu, Icons.Outlined.Menu, false, route = Screens.PostsScreen.route),
         BottomNavigationItem("Offer", Icons.Filled.AddCircleOutline, Icons.Outlined.AddCircleOutline, false, route = Screens.OfferScreen.route),
         BottomNavigationItem("Search", Icons.Filled.Search, Icons.Outlined.Search, false, route = Screens.SearchScreen.route),
         BottomNavigationItem("Inbox", Icons.Filled.Email, Icons.Outlined.Email, false, 16, route = Screens.InboxScreen.route),
@@ -51,11 +51,7 @@ fun BottomNavigationBar(
                 selected = selectedItemIndex == index,
                 onClick = {
                     onItemSelected(index)
-                    navController.navigate(item.route) {
-//                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-//                        launchSingleTop = true
-//                        restoreState = true
-                    }
+                    navController.navigate(item.route)
                 },
                 alwaysShowLabel = false,
                 label = {

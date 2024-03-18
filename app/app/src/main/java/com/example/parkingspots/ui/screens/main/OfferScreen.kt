@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.parkingspots.ui.components.BottomNavigationBar
+import com.example.parkingspots.ui.components.CustomTopBar
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
@@ -26,6 +27,9 @@ fun OfferScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         Scaffold(
+            topBar = {
+                CustomTopBar(title = "Offer you parking spot",)
+            },
             bottomBar = {
                 BottomNavigationBar(
                     navController = navController,

@@ -13,6 +13,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.parkingspots.ui.components.BottomNavigationBar
+import com.example.parkingspots.ui.components.CustomTabView
+import com.example.parkingspots.ui.components.CustomTopBar
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
@@ -20,12 +22,16 @@ fun InboxScreen(
     navController: NavController
 ) {
     var selectedItemIndex by rememberSaveable { mutableStateOf(3) }
+    var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Scaffold(
+            topBar = {
+                CustomTopBar(title = "Your inbox",)
+            },
             bottomBar = {
                 BottomNavigationBar(
                     navController = navController,
@@ -34,6 +40,11 @@ fun InboxScreen(
                 )
             }
         ) {
+            CustomTabView(
+                tabs = listOf("Messages", "Notifications"),
+                selectedTabIndex = selectedTabIndex,
+                onTabSelected = { selectedTabIndex = it }
+            )
         }
     }
 }
