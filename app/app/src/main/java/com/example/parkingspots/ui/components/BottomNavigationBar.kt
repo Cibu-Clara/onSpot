@@ -42,7 +42,7 @@ fun BottomNavigationBar(
         BottomNavigationItem("Offer", Icons.Filled.AddCircleOutline, Icons.Outlined.AddCircleOutline, false, route = Screens.OfferScreen.route),
         BottomNavigationItem("Search", Icons.Filled.Search, Icons.Outlined.Search, false, route = Screens.SearchScreen.route),
         BottomNavigationItem("Inbox", Icons.Filled.Email, Icons.Outlined.Email, false, 16, route = Screens.InboxScreen.route),
-        BottomNavigationItem("Profile", Icons.Filled.Person, Icons.Outlined.Person, true, route = Screens.ProfileScreen.route)
+        BottomNavigationItem("Profile", Icons.Filled.Person, Icons.Outlined.Person, true, route = Screens.UserProfileScreen.route)
     )
 
     NavigationBar {

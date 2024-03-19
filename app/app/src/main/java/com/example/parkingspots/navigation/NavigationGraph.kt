@@ -11,7 +11,7 @@ import com.example.parkingspots.ui.screens.auth.OpeningScreen
 import com.example.parkingspots.ui.screens.main.InboxScreen
 import com.example.parkingspots.ui.screens.main.OfferScreen
 import com.example.parkingspots.ui.screens.main.PostsScreen
-import com.example.parkingspots.ui.screens.main.ProfileScreen
+import com.example.parkingspots.ui.screens.main.UserProfileScreen
 import com.example.parkingspots.ui.screens.main.SearchScreen
 import com.google.firebase.auth.FirebaseAuth
 
@@ -51,7 +51,7 @@ fun NavigationGraph(
         composable(route = Screens.InboxScreen.route) { InboxScreen(navController) }
 
         // Profile Screen
-        composable(route = Screens.ProfileScreen.route) { ProfileScreen(navController) }
+        composable(route = Screens.UserProfileScreen.route) { UserProfileScreen(navController) }
     }
 
 }

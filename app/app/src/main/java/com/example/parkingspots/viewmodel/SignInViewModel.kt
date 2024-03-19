@@ -19,15 +19,9 @@ class SignInViewModel : ViewModel() {
     fun loginUser(email: String, password: String) = viewModelScope.launch {
         repository.loginUser(email, password).collect { result ->
             when(result) {
-                is Resource.Success -> {
-                    _signInState.send(SignInState(isSuccess = "Sign In Success"))
-                }
-                is Resource.Loading -> {
-                    _signInState.send(SignInState(isLoading = true))
-                }
-                is Resource.Error -> {
-                    _signInState.send(SignInState(isError = result.message))
-                }
+                is Resource.Success -> { _signInState.send(SignInState(isSuccess = "Sign In Success")) }
+                is Resource.Loading -> { _signInState.send(SignInState(isLoading = true)) }
+                is Resource.Error -> { _signInState.send(SignInState(isError = result.message)) }
             }
         }
     }

@@ -26,6 +26,10 @@ class UserRepositoryImpl : UserRepository {
         }
     }
 
+    override fun logoutUser() {
+        firebaseAuth.signOut()
+    }
+
     override fun registerUser(email: String, password: String, user: User): Flow<Resource<AuthResult>> {
         return flow {
             emit(Resource.Loading())
