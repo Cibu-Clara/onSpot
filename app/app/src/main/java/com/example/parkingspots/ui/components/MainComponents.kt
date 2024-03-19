@@ -3,6 +3,9 @@ package com.example.parkingspots.ui.components
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.TopAppBar
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -43,4 +46,59 @@ fun CustomTabView(
             )
         }
     }
+}
+
+
+@Composable
+fun CustomAlertDialog(
+    title: String,
+    text: String,
+    confirmButtonText: String = "OK",
+    dismissButtonText: String? = null,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        title = {
+            Text(
+                text = title,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = Color.Black
+            )
+        },
+        text = {
+            Text(
+                text = text,
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp,
+                color = Color.Gray
+            )
+        },
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConfirm()
+                }
+            ) {
+                Text(confirmButtonText)
+            }
+        },
+        dismissButton = {
+            dismissButtonText?.let {
+                Button(
+                    onClick = {
+                        onDismiss()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.LightGray,
+                        contentColor = Color.Black
+                    )
+                ) {
+                    Text(it)
+                }
+            }
+        }
+    )
 }

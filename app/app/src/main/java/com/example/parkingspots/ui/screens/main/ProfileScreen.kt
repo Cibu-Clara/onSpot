@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.parkingspots.ui.components.BottomNavigationBar
+import com.example.parkingspots.ui.components.CustomAlertDialog
 import com.example.parkingspots.ui.components.CustomTabView
 import com.example.parkingspots.ui.components.CustomTopBar
 import com.example.parkingspots.ui.theme.purple
@@ -65,6 +66,7 @@ fun ProfileScreen(
                     0 -> {
                         // TODO: About You tab content
                     }
+
                     1 -> {
                         SettingsList(navController)
                     }
@@ -80,6 +82,10 @@ fun SettingsList(
     modifier: Modifier = Modifier
 ) {
     val settingsOptions = listOf("Change password", "Delete account", "Log out")
+
+    var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
+    var showDeleteAccountDialog by rememberSaveable { mutableStateOf(false) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -88,7 +94,21 @@ fun SettingsList(
         settingsOptions.forEachIndexed() { index, option ->
             Row(
                 modifier = Modifier
-                    .clickable { onOptionSelected(option, navController) }
+                    .clickable {
+                        when (option) {
+                            "Change password" -> {
+                                // TODO
+                            }
+
+                            "Delete account" -> {
+                                showDeleteAccountDialog = true
+                            }
+
+                            "Log out" -> {
+                                showLogoutDialog = true
+                            }
+                        }
+                    }
                     .padding(bottom = 8.dp)
             ) {
                 Text(
@@ -112,21 +132,28 @@ fun SettingsList(
             }
         }
     }
-}
-
-private fun onOptionSelected(option: String, navController: NavController) {
-    when (option) {
-        "Change password" -> {
-            navController.navigate("change_password_route")
-        }
-
-        "Delete account" -> {
-        }
-
-        "Log out" -> {
-            navController.navigate("login_route") {
-                popUpTo("profile_route") { inclusive = true }
-            }
-        }
+    if (showLogoutDialog) {
+        CustomAlertDialog(
+            title = "Sign out confirmation",
+            text = "Are you sure you want to log out?",
+            confirmButtonText = "Yes",
+            dismissButtonText = "No",
+            onConfirm = {
+                showLogoutDialog = false
+            },
+            onDismiss = { showLogoutDialog = false }
+        )
+    }
+    if (showDeleteAccountDialog) {
+        CustomAlertDialog(
+            title = "Delete account confirmation",
+            text = "Are you sure you want to permanently delete your account? This action cannot be undone!",
+            confirmButtonText = "Yes",
+            dismissButtonText = "No",
+            onConfirm = {
+                showDeleteAccountDialog = false
+            },
+            onDismiss = { showDeleteAccountDialog = false }
+        )
     }
 }

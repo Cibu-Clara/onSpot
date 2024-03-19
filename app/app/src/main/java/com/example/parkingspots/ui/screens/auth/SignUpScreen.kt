@@ -10,11 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.Button
 import androidx.compose.material3.Text
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,6 +37,7 @@ import androidx.navigation.NavController
 import com.example.parkingspots.R
 import com.example.parkingspots.viewmodel.SignUpViewModel
 import com.example.parkingspots.navigation.Screens
+import com.example.parkingspots.ui.components.CustomAlertDialog
 import com.example.parkingspots.ui.components.CustomButton
 import com.example.parkingspots.ui.components.CustomClickableText
 import com.example.parkingspots.ui.components.CustomPasswordField
@@ -199,34 +198,14 @@ fun SignUpScreen(
         }
     }
     if (showPasswordMismatchDialog) {
-        AlertDialog(
-            onDismissRequest = { showPasswordMismatchDialog = false },
-            title = {
-                Text(
-                    text = "Password mismatch",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = Color.Black
-                )
+        CustomAlertDialog(
+            title = "Password mismatch",
+            text = "The passwords you entered do not match. Please try again.",
+            onConfirm = {
+                confirmPassword = ""
+                showPasswordMismatchDialog = false
             },
-            text = {
-                Text(
-                    text = "The passwords you entered do not match. Please try again.",
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 16.sp,
-                    color = Color.Gray
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        confirmPassword = ""
-                        showPasswordMismatchDialog = false
-                    }
-                ) {
-                    Text("OK")
-                }
-            }
+            onDismiss = { showPasswordMismatchDialog = false }
         )
     }
 }
