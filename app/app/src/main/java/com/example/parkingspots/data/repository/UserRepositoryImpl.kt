@@ -3,6 +3,7 @@ package com.example.parkingspots.data.repository
 import com.example.parkingspots.data.model.User
 import com.example.parkingspots.utils.Resource
 import com.google.firebase.auth.AuthResult
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -42,6 +43,40 @@ class UserRepositoryImpl : UserRepository {
             emit(Resource.Success(result))
         }.catch {
             emit(Resource.Error(it.message.toString()))
+        }
+    }
+
+    override fun deleteUserAccount(): Flow<Resource<Void?>> = flow {
+        try {
+            emit(Resource.Loading())
+            val currentUser = firebaseAuth.currentUser
+            if (currentUser != null) {
+                usersCollection
+                    .document(currentUser.uid)
+                    .delete()
+                    .await()
+                currentUser.delete().await()
+                emit(Resource.Success(null))
+            } else {
+                emit(Resource.Error("User not logged in"))
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "An error occurred"))
+        }
+    }
+
+    override suspend fun verifyPassword(password: String): Boolean {
+        val currentUser = firebaseAuth.currentUser
+        val email = currentUser?.email ?: return false
+        val credential = EmailAuthProvider.getCredential(email, password)
+
+        return try {
+            currentUser
+                .reauthenticate(credential)
+                .await()
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 }

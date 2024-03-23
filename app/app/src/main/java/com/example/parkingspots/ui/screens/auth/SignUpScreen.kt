@@ -126,7 +126,6 @@ fun SignUpScreen(
                 } else {
                     scope.launch {
                        signUpViewModel.registerUser(firstName = firstName, lastName = lastName, email = email, password = password)
-                       navController.navigate(Screens.SearchScreen.route)
                     }
                 }
             },
@@ -181,22 +180,6 @@ fun SignUpScreen(
                 onClick = { navController.navigate(Screens.SignInScreen.route) })
         }
     }
-    LaunchedEffect(key1 = state.value?.isSuccess) {
-        scope.launch {
-            if (state.value?.isSuccess?.isNotEmpty() == true) {
-                val success = state.value?.isSuccess
-                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-    LaunchedEffect(key1 = state.value?.isError) {
-        scope.launch {
-            if (state.value?.isError?.isNotEmpty() == true) {
-                val error = state.value?.isError
-                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
     if (showPasswordMismatchDialog) {
         CustomAlertDialog(
             title = "Password mismatch",
@@ -207,5 +190,22 @@ fun SignUpScreen(
             },
             onDismiss = { showPasswordMismatchDialog = false }
         )
+    }
+    LaunchedEffect(key1 = state.value?.isSuccess) {
+        scope.launch {
+            if (state.value?.isSuccess?.isNotEmpty() == true) {
+                val success = state.value?.isSuccess
+                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+                navController.navigate(Screens.SearchScreen.route)
+            }
+        }
+    }
+    LaunchedEffect(key1 = state.value?.isError) {
+        scope.launch {
+            if (state.value?.isError?.isNotEmpty() == true) {
+                val error = state.value?.isError
+                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 }

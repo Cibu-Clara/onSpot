@@ -9,4 +9,6 @@ interface UserRepository {
     fun loginUser(email: String, password: String): Flow<Resource<AuthResult>>
     fun logoutUser()
     fun registerUser(email: String, password: String, user: User): Flow<Resource<AuthResult>>
+    fun deleteUserAccount(): Flow<Resource<Void?>>
+    suspend fun verifyPassword(password: String): Boolean
 }

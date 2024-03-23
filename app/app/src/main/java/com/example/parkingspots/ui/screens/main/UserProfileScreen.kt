@@ -1,11 +1,14 @@
 package com.example.parkingspots.ui.screens.main
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Icon
@@ -13,27 +16,34 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForwardIos
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.parkingspots.navigation.Screens
 import com.example.parkingspots.ui.components.BottomNavigationBar
+import com.example.parkingspots.ui.components.ConfirmPasswordDialog
 import com.example.parkingspots.ui.components.CustomAlertDialog
 import com.example.parkingspots.ui.components.CustomTabView
 import com.example.parkingspots.ui.components.CustomTopBar
 import com.example.parkingspots.ui.theme.purple
 import com.example.parkingspots.viewmodel.UserProfileViewModel
+import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
@@ -49,9 +59,7 @@ fun UserProfileScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         Scaffold(
-            topBar = {
-                CustomTopBar(title = "Your profile")
-            },
+            topBar = { CustomTopBar(title = "Your profile") },
             bottomBar = {
                 BottomNavigationBar(
                     navController = navController,
@@ -68,12 +76,9 @@ fun UserProfileScreen(
                 )
                 when (selectedTabIndex) {
                     0 -> {
-                        // TODO: About You tab content
+                    // TODO: About You tab content
                     }
-
-                    1 -> {
-                        SettingsList(navController, userProfileViewModel)
-                    }
+                    1 -> { SettingsList(navController, userProfileViewModel) }
                 }
             }
         }
@@ -90,13 +95,19 @@ fun SettingsList(
 
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
     var showDeleteAccountDialog by rememberSaveable { mutableStateOf(false) }
+    var showPasswordConfirmationDialog by rememberSaveable { mutableStateOf(false) }
+    //var passwordInput by rememberSaveable { mutableStateOf("") }
+
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val deleteAccountState = userProfileViewModel.deleteAccountState.collectAsState(initial = null)
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 15.dp, vertical = 15.dp),
     ) {
-        settingsOptions.forEachIndexed() { index, option ->
+        settingsOptions.forEachIndexed { index, option ->
             Row(
                 modifier = Modifier
                     .clickable {
@@ -106,7 +117,7 @@ fun SettingsList(
                             }
 
                             "Delete account" -> {
-                                showDeleteAccountDialog = true
+                                showPasswordConfirmationDialog = true
                             }
 
                             "Log out" -> {
@@ -136,6 +147,14 @@ fun SettingsList(
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (deleteAccountState.value?.isLoading == true) {
+                CircularProgressIndicator()
+            }
+        }
     }
     if (showLogoutDialog) {
         CustomAlertDialog(
@@ -144,11 +163,28 @@ fun SettingsList(
             confirmButtonText = "Yes",
             dismissButtonText = "No",
             onConfirm = {
-                showLogoutDialog = false
                 userProfileViewModel.logoutUser()
+                showLogoutDialog = false
                 navController.navigate(Screens.SignInScreen.route)
             },
             onDismiss = { showLogoutDialog = false }
+        )
+    }
+    if (showPasswordConfirmationDialog) {
+        ConfirmPasswordDialog(
+            onConfirm = { enteredPassword ->
+                userProfileViewModel.verifyPassword(enteredPassword) {isVerified ->
+                    if (isVerified) {
+                        showPasswordConfirmationDialog = false
+                        showDeleteAccountDialog = true
+                    } else {
+                        Toast.makeText(context, "Incorrect password. Please try again.", Toast.LENGTH_LONG).show()
+                    }
+                }
+            },
+            onDismiss = {
+                showPasswordConfirmationDialog = false
+            }
         )
     }
     if (showDeleteAccountDialog) {
@@ -158,9 +194,29 @@ fun SettingsList(
             confirmButtonText = "Yes",
             dismissButtonText = "No",
             onConfirm = {
-                showDeleteAccountDialog = false
+                scope.launch {
+                    userProfileViewModel.deleteUserAccount()
+                    showDeleteAccountDialog = false
+                }
             },
             onDismiss = { showDeleteAccountDialog = false }
         )
+    }
+    LaunchedEffect(key1 = deleteAccountState.value?.isSuccess) {
+        scope.launch {
+            if (deleteAccountState.value?.isSuccess?.isNotEmpty() == true) {
+                val success = deleteAccountState.value?.isSuccess
+                navController.navigate(Screens.OpeningScreen.route)
+                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    LaunchedEffect(key1 = deleteAccountState.value?.isError) {
+        scope.launch {
+            if (deleteAccountState.value?.isError?.isNotEmpty() == true) {
+                val error = deleteAccountState.value?.isError
+                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 }

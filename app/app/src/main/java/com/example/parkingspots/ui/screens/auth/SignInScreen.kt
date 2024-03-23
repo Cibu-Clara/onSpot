@@ -108,7 +108,6 @@ fun SignInScreen(
             onClick = {
                 scope.launch {
                     signInViewModel.loginUser(email, password)
-                    navController.navigate(Screens.SearchScreen.route)
                 }
             },
             buttonText = "Sign In",
@@ -168,6 +167,7 @@ fun SignInScreen(
             if (state.value?.isSuccess?.isNotEmpty() == true) {
                 val success = state.value?.isSuccess
                 Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+                navController.navigate(Screens.SearchScreen.route)
             }
         }
     }
