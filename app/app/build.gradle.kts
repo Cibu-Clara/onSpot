@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.parkingspots"
+    namespace = "com.example.onspot"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.parkingspots"
+        applicationId = "com.example.onspot"
         minSdk = 27
         targetSdk = 33
         versionCode = 1

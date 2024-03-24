@@ -13,6 +13,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Parking Spots"
+rootProject.name = "onSpot"
 include(":app")
  
