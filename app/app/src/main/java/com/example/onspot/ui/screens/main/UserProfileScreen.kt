@@ -113,17 +113,9 @@ fun SettingsList(
                 modifier = Modifier
                     .clickable {
                         when (option) {
-                            "Change password" -> {
-                                // TODO
-                            }
-
-                            "Delete account" -> {
-                                showPasswordConfirmationDialog = true
-                            }
-
-                            "Log out" -> {
-                                showLogoutDialog = true
-                            }
+                            "Change password" -> { navController.navigate(Screens.ChangePasswordScreen.route) }
+                            "Delete account" -> { showPasswordConfirmationDialog = true }
+                            "Log out" -> { showLogoutDialog = true }
                         }
                     }
                     .padding(bottom = 8.dp)

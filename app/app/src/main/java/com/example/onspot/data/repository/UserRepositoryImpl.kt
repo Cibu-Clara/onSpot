@@ -5,6 +5,7 @@ import com.example.onspot.utils.Resource
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
@@ -87,6 +88,24 @@ class UserRepositoryImpl : UserRepository {
             emit(Resource.Success(null))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Failed to send password reset email"))
+        }
+    }
+
+    override fun changePassword(currentPassword: String, newPassword: String): Flow<Resource<Void?>> = flow {
+        try {
+            emit(Resource.Loading())
+            val currentUser = firebaseAuth.currentUser ?: throw FirebaseAuthException("No user logged in", "User must be logged in to change password.")
+
+            val email = currentUser.email ?: throw FirebaseAuthException("No email found", "User email is required for reauthentication.")
+            val credential = EmailAuthProvider.getCredential(email, currentPassword)
+            currentUser.reauthenticate(credential).await()
+
+            currentUser.updatePassword(newPassword).await()
+            emit(Resource.Success(null))
+        } catch (e: FirebaseAuthException) {
+            emit(Resource.Error(e.message ?: "Authentication failed"))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Failed to change password: ${e.localizedMessage}"))
         }
     }
 }

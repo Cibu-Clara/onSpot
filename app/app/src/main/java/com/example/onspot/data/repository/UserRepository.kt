@@ -12,4 +12,5 @@ interface UserRepository {
     fun deleteUserAccount(): Flow<Resource<Void?>>
     suspend fun verifyPassword(password: String): Boolean
     fun sendPasswordResetEmail(email: String): Flow<Resource<Void?>>
+    fun changePassword(currentPassword: String, newPassword: String): Flow<Resource<Void?>>
 }

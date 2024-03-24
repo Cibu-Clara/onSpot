@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.onspot.ui.screens.auth.ChangePasswordScreen
 import com.example.onspot.ui.screens.auth.SignInScreen
 import com.example.onspot.ui.screens.auth.SignUpScreen
 import com.example.onspot.ui.screens.auth.OpeningScreen
@@ -50,8 +51,11 @@ fun NavigationGraph(
         // Inbox Screen
         composable(route = Screens.InboxScreen.route) { InboxScreen(navController) }
 
-        // Profile Screen
+        // User Profile Screen
         composable(route = Screens.UserProfileScreen.route) { UserProfileScreen(navController) }
+
+        // Change Password Screen
+        composable(route = Screens.ChangePasswordScreen.route) { ChangePasswordScreen(navController) }
     }
 
 }
