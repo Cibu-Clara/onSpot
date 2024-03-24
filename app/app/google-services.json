@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "262975283389",
-    "project_id": "parking-spots-73557",
-    "storage_bucket": "parking-spots-73557.appspot.com"
+    "project_number": "849364024341",
+    "project_id": "onspot-24b29",
+    "storage_bucket": "onspot-24b29.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:262975283389:android:fd816b977b3cb82bf8d7d4",
+        "mobilesdk_app_id": "1:849364024341:android:5edb9d10aa8a330c3c221c",
         "android_client_info": {
-          "package_name": "com.example.parkingspots"
+          "package_name": "com.example.onspot"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyD7EjV-GwAi_TMaU2LqsP2-lAMie97D87g"
+          "current_key": "AIzaSyDfGhVe5AHzqKihd68TK1EFJ7PbXab4wDo"
         }
       ],
       "services": {

@@ -62,7 +62,6 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material")
-    implementation("com.google.firebase:firebase-auth:22.3.1")
     implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -73,10 +72,13 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     //  Compose
-    implementation("androidx.compose.material:material-icons-extended:1.6.3")
+    implementation("androidx.compose.material:material-icons-extended:1.6.4")
 
-    //  Firestore
-    implementation("com.google.firebase:firebase-firestore-ktx:24.10.3")
+    //  Firebase
+    implementation("com.google.firebase:firebase-auth:22.3.1")
+    implementation("com.google.firebase:firebase-firestore-ktx:24.11.0")
+    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+    implementation("com.google.firebase:firebase-analytics")
 
     //  NavController
     implementation ("androidx.navigation:navigation-compose:2.7.7")
