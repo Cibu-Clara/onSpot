@@ -75,10 +75,11 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.6.4")
 
     //  Firebase
-    implementation("com.google.firebase:firebase-auth:22.3.1")
-    implementation("com.google.firebase:firebase-firestore-ktx:24.11.0")
     implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
     implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth:22.3.1")
+    implementation("com.google.firebase:firebase-firestore-ktx:24.11.0")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
 
     //  NavController
     implementation ("androidx.navigation:navigation-compose:2.7.7")

@@ -126,7 +126,7 @@ fun SignInScreen(
                 CircularProgressIndicator()
             }
         }
-        DividerWithText(text = "or login with")
+        DividerWithText(text = "or connect with")
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center

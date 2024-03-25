@@ -12,7 +12,20 @@
           "package_name": "com.example.onspot"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "849364024341-5go48kgn4d9qd1811ovmhp8p390cmri6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.onspot",
+            "certificate_hash": "6f967cf15ec89fdd080fce96bd59848b35e561eb"
+          }
+        },
+        {
+          "client_id": "849364024341-nmtblhft9pj1b98e5tvdvtcbtrec2lf9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDfGhVe5AHzqKihd68TK1EFJ7PbXab4wDo"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "849364024341-nmtblhft9pj1b98e5tvdvtcbtrec2lf9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
