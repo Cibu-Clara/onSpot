@@ -1,6 +1,9 @@
 package com.example.onspot.ui.screens.auth
 
+import android.app.Activity
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -45,6 +48,8 @@ import com.example.onspot.ui.components.CustomTextField
 import com.example.onspot.ui.components.DividerWithText
 import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.ui.theme.purple
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import kotlinx.coroutines.launch
 
 @Composable
@@ -58,6 +63,7 @@ fun SignInScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val signInState = signInViewModel.signInState.collectAsState(initial = null)
+    val googleSignInState = signInViewModel.googleSignInState.collectAsState(initial = null)
     val resetPasswordState = signInViewModel.resetPasswordState.collectAsState(initial = null)
 
     val isButtonEnabled = email.isNotBlank() && password.isNotBlank()
@@ -112,7 +118,7 @@ fun SignInScreen(
         CustomButton(
             onClick = {
                 scope.launch {
-                    signInViewModel.loginUser(email, password)
+                    signInViewModel.loginWithEmailAndPassword(email, password)
                 }
             },
             buttonText = "Sign In",
@@ -122,7 +128,7 @@ fun SignInScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            if (signInState.value?.isLoading == true || resetPasswordState.value?.isLoading == true) {
+            if (signInState.value?.isLoading == true || googleSignInState.value?.isLoading == true || resetPasswordState.value?.isLoading == true) {
                 CircularProgressIndicator()
             }
         }
@@ -131,7 +137,26 @@ fun SignInScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            IconButton(onClick = {}) {
+            val googleSignInLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.StartActivityForResult(),
+                onResult = { result ->
+                    if (result.resultCode == Activity.RESULT_OK) {
+                        signInViewModel.handleGoogleSignInResult(result.data)
+                    }
+                }
+            )
+            IconButton(onClick = {
+                val googleSignInClient = GoogleSignIn.getClient(
+                    context,
+                    GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken("849364024341-nmtblhft9pj1b98e5tvdvtcbtrec2lf9.apps.googleusercontent.com")
+                        .requestEmail()
+                        .requestProfile()
+                        .build()
+                )
+                val signInIntent = googleSignInClient.signInIntent
+                googleSignInLauncher.launch(signInIntent)
+            }) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_google),
                     contentDescription = "Google Icon",
@@ -197,6 +222,24 @@ fun SignInScreen(
         scope.launch {
             if (signInState.value?.isError?.isNotEmpty() == true) {
                 val error = signInState.value?.isError
+                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    LaunchedEffect(key1 = googleSignInState.value?.isSuccess) {
+        scope.launch {
+            if (googleSignInState.value?.isSuccess?.isNotEmpty() == true) {
+                val success = googleSignInState.value?.isSuccess
+                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+                navController.navigate(Screens.SearchScreen.route)
+            }
+        }
+    }
+    LaunchedEffect(key1 = googleSignInState.value?.isError) {
+        scope.launch {
+            if (googleSignInState.value?.isError?.isNotEmpty() == true) {
+                val error = googleSignInState.value?.isError
                 Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
             }
         }

@@ -1,6 +1,9 @@
 package com.example.onspot.ui.screens.auth
 
+import android.app.Activity
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,6 +48,8 @@ import com.example.onspot.ui.components.CustomTextField
 import com.example.onspot.ui.components.DividerWithText
 import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.ui.theme.purple
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import kotlinx.coroutines.launch
 
 @Composable
@@ -60,7 +65,8 @@ fun SignUpScreen(
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val state = signUpViewModel.signUpState.collectAsState(initial = null)
+    val signUpState = signUpViewModel.signUpState.collectAsState(initial = null)
+    val googleSignUpState = signUpViewModel.googleSignUpState.collectAsState(initial = null)
 
     var showPasswordMismatchDialog by remember { mutableStateOf(false) }
     val isButtonEnabled = firstName.isNotBlank() && lastName.isNotBlank() && email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank()
@@ -136,7 +142,7 @@ fun SignUpScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            if (state.value?.isLoading == true) {
+            if (signUpState.value?.isLoading == true || googleSignUpState.value?.isLoading == true) {
                 CircularProgressIndicator()
             }
         }
@@ -145,7 +151,26 @@ fun SignUpScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            IconButton(onClick = {}) {
+            val googleSignUpLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.StartActivityForResult(),
+                onResult = { result ->
+                    if (result.resultCode == Activity.RESULT_OK) {
+                        signUpViewModel.handleGoogleSignUpResult(result.data)
+                    }
+                }
+            )
+            IconButton(onClick = {
+                val googleSignUpClient = GoogleSignIn.getClient(
+                    context,
+                    GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken("849364024341-nmtblhft9pj1b98e5tvdvtcbtrec2lf9.apps.googleusercontent.com")
+                        .requestEmail()
+                        .requestProfile()
+                        .build()
+                )
+                val signInIntent = googleSignUpClient.signInIntent
+                googleSignUpLauncher.launch(signInIntent)
+            }) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_google),
                     contentDescription = "Google Icon",
@@ -191,19 +216,36 @@ fun SignUpScreen(
             onDismiss = { showPasswordMismatchDialog = false }
         )
     }
-    LaunchedEffect(key1 = state.value?.isSuccess) {
+    LaunchedEffect(key1 = signUpState.value?.isSuccess) {
         scope.launch {
-            if (state.value?.isSuccess?.isNotEmpty() == true) {
-                val success = state.value?.isSuccess
+            if (signUpState.value?.isSuccess?.isNotEmpty() == true) {
+                val success = signUpState.value?.isSuccess
                 Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
                 navController.navigate(Screens.SearchScreen.route)
             }
         }
     }
-    LaunchedEffect(key1 = state.value?.isError) {
+    LaunchedEffect(key1 = signUpState.value?.isError) {
         scope.launch {
-            if (state.value?.isError?.isNotEmpty() == true) {
-                val error = state.value?.isError
+            if (signUpState.value?.isError?.isNotEmpty() == true) {
+                val error = signUpState.value?.isError
+                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    LaunchedEffect(key1 = googleSignUpState.value?.isSuccess) {
+        scope.launch {
+            if (googleSignUpState.value?.isSuccess?.isNotEmpty() == true) {
+                val success = googleSignUpState.value?.isSuccess
+                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+                navController.navigate(Screens.SearchScreen.route)
+            }
+        }
+    }
+    LaunchedEffect(key1 = googleSignUpState.value?.isError) {
+        scope.launch {
+            if (googleSignUpState.value?.isError?.isNotEmpty() == true) {
+                val error = googleSignUpState.value?.isError
                 Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
             }
         }

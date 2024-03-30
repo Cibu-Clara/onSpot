@@ -45,6 +45,8 @@ import com.example.onspot.ui.components.CustomTabView
 import com.example.onspot.ui.components.CustomTopBar
 import com.example.onspot.ui.theme.purple
 import com.example.onspot.viewmodel.UserProfileViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -98,10 +100,15 @@ fun SettingsList(
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
     var showDeleteAccountDialog by rememberSaveable { mutableStateOf(false) }
     var showPasswordConfirmationDialog by rememberSaveable { mutableStateOf(false) }
+    var showAuthenticationWarningDialog by rememberSaveable { mutableStateOf(false) }
+    var warningMessage by rememberSaveable { mutableStateOf("") }
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val deleteAccountState = userProfileViewModel.deleteAccountState.collectAsState(initial = null)
+    val logoutState = userProfileViewModel.logoutState.collectAsState(initial = null)
+
+    val googleSignInClient = GoogleSignIn.getClient(context, GoogleSignInOptions.DEFAULT_SIGN_IN)
 
     Column(
         modifier = modifier
@@ -113,8 +120,25 @@ fun SettingsList(
                 modifier = Modifier
                     .clickable {
                         when (option) {
-                            "Change password" -> { navController.navigate(Screens.ChangePasswordScreen.route) }
-                            "Delete account" -> { showPasswordConfirmationDialog = true }
+                            "Change password" -> {
+                                userProfileViewModel.navigateForPasswordChange { canChangePass, message ->
+                                    if (canChangePass) {
+                                        navController.navigate(Screens.ChangePasswordScreen.route)
+                                    } else {
+                                        warningMessage = message ?: "Please try again."
+                                        showAuthenticationWarningDialog = true
+                                    }
+                                }
+                            }
+                            "Delete account" -> {
+                                userProfileViewModel.verifyAuthProvider { isEmailAuthenticated ->
+                                    if (isEmailAuthenticated) {
+                                        showPasswordConfirmationDialog = true
+                                    } else {
+                                        showDeleteAccountDialog = true
+                                    }
+                                }
+                            }
                             "Log out" -> { showLogoutDialog = true }
                         }
                     }
@@ -144,7 +168,7 @@ fun SettingsList(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            if (deleteAccountState.value?.isLoading == true) {
+            if (deleteAccountState.value?.isLoading == true || logoutState.value?.isLoading == true) {
                 CircularProgressIndicator()
             }
         }
@@ -156,9 +180,8 @@ fun SettingsList(
             confirmButtonText = "Yes",
             dismissButtonText = "No",
             onConfirm = {
-                userProfileViewModel.logoutUser()
+                userProfileViewModel.logoutUser(googleSignInClient)
                 showLogoutDialog = false
-                navController.navigate(Screens.SignInScreen.route)
             },
             onDismiss = { showLogoutDialog = false }
         )
@@ -193,11 +216,19 @@ fun SettingsList(
             dismissButtonText = "No",
             onConfirm = {
                 scope.launch {
-                    userProfileViewModel.deleteUserAccount()
+                    userProfileViewModel.deleteUserAccount(googleSignInClient)
                     showDeleteAccountDialog = false
                 }
             },
             onDismiss = { showDeleteAccountDialog = false }
+        )
+    }
+    if (showAuthenticationWarningDialog) {
+        CustomAlertDialog(
+            title = "Cannot perform action",
+            text = warningMessage,
+            onConfirm = { showAuthenticationWarningDialog = false },
+            onDismiss = { showAuthenticationWarningDialog = false }
         )
     }
     LaunchedEffect(key1 = deleteAccountState.value?.isSuccess) {
@@ -213,6 +244,21 @@ fun SettingsList(
         scope.launch {
             if (deleteAccountState.value?.isError?.isNotEmpty() == true) {
                 val error = deleteAccountState.value?.isError
+                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    LaunchedEffect(key1 = logoutState.value?.isSuccess) {
+        scope.launch {
+            if (logoutState.value?.isSuccess?.isNotEmpty() == true) {
+                navController.navigate(Screens.SignInScreen.route)
+            }
+        }
+    }
+    LaunchedEffect(key1 = logoutState.value?.isError) {
+        scope.launch {
+            if (logoutState.value?.isError?.isNotEmpty() == true) {
+                val error = logoutState.value?.isError
                 Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
             }
         }

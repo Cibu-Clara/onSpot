@@ -2,10 +2,14 @@ package com.example.onspot.data.repository
 
 import com.example.onspot.data.model.User
 import com.example.onspot.utils.Resource
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
@@ -18,7 +22,7 @@ class UserRepositoryImpl : UserRepository {
     private val usersCollection: CollectionReference =
         FirebaseFirestore.getInstance().collection("users")
 
-    override fun loginUser(email: String, password: String): Flow<Resource<AuthResult>> {
+    override fun loginWithEmailAndPassword(email: String, password: String): Flow<Resource<AuthResult>> {
         return flow {
             emit(Resource.Loading())
             val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
@@ -28,8 +32,41 @@ class UserRepositoryImpl : UserRepository {
         }
     }
 
-    override fun logoutUser() {
-        firebaseAuth.signOut()
+    override fun connectWithGoogle(account: GoogleSignInAccount): Flow<Resource<FirebaseUser>> = flow{
+        try {
+            emit(Resource.Loading())
+            val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+            val authResult = firebaseAuth.signInWithCredential(credential).await()
+            val firebaseUser = authResult.user!!
+
+            if (authResult.additionalUserInfo?.isNewUser == true) {
+                val user = User(
+                    uuid = firebaseUser.uid,
+                    firstName = account.givenName ?: "",
+                    lastName = account.familyName ?: "",
+                    email = firebaseUser.email!!,
+                    isAdmin = false
+                )
+                usersCollection
+                    .document(firebaseUser.uid)
+                    .set(user)
+                    .await()
+            }
+            emit(Resource.Success(firebaseUser))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Failed to authenticate with Google"))
+        }
+    }
+
+    override suspend fun logoutUser(googleSignInClient: GoogleSignInClient?): Flow<Resource<Void?>> = flow {
+        try {
+            emit(Resource.Loading())
+            firebaseAuth.signOut()
+            googleSignInClient?.signOut()?.await()
+            emit(Resource.Success(null))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Failed to log out"))
+        }
     }
 
     override fun registerUser(email: String, password: String, user: User): Flow<Resource<AuthResult>> {
@@ -47,7 +84,7 @@ class UserRepositoryImpl : UserRepository {
         }
     }
 
-    override fun deleteUserAccount(): Flow<Resource<Void?>> = flow {
+    override fun deleteUserAccount(googleSignInClient: GoogleSignInClient?): Flow<Resource<Void?>> = flow {
         try {
             emit(Resource.Loading())
             val currentUser = firebaseAuth.currentUser
@@ -57,6 +94,7 @@ class UserRepositoryImpl : UserRepository {
                     .delete()
                     .await()
                 currentUser.delete().await()
+                googleSignInClient?.signOut()?.await()
                 emit(Resource.Success(null))
             } else {
                 emit(Resource.Error("User not logged in"))
@@ -107,5 +145,10 @@ class UserRepositoryImpl : UserRepository {
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Failed to change password: ${e.localizedMessage}"))
         }
+    }
+
+    override suspend fun getCurrentUserAuthProvider(): String? {
+        return firebaseAuth.currentUser?.providerData
+            ?.firstOrNull { it.providerId != "firebase" }?.providerId
     }
 }
