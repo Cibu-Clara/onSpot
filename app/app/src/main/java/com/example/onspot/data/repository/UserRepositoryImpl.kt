@@ -37,7 +37,7 @@ class UserRepositoryImpl : UserRepository {
             emit(Resource.Loading())
             val credential = GoogleAuthProvider.getCredential(account.idToken, null)
             val authResult = firebaseAuth.signInWithCredential(credential).await()
-            val firebaseUser = authResult.user!!
+            val firebaseUser = authResult.user ?: throw Exception("Authentication failed. Please check your credentials and try again.")
 
             if (authResult.additionalUserInfo?.isNewUser == true) {
                 val user = User(

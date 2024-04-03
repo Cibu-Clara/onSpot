@@ -20,11 +20,11 @@ class SignInViewModel : ViewModel() {
     private val _signInState = Channel<SignInState>()
     val signInState = _signInState.receiveAsFlow()
 
-    private val _resetPasswordState = Channel<ResetPasswordState>()
-    val resetPasswordState = _resetPasswordState.receiveAsFlow()
-
     private val _googleSignInState = Channel<SignInState>()
     val googleSignInState = _googleSignInState.receiveAsFlow()
+
+    private val _resetPasswordState = Channel<ResetPasswordState>()
+    val resetPasswordState = _resetPasswordState.receiveAsFlow()
 
     fun loginWithEmailAndPassword(email: String, password: String) = viewModelScope.launch {
         repository.loginWithEmailAndPassword(email, password).collect { result ->
@@ -38,7 +38,6 @@ class SignInViewModel : ViewModel() {
 
     fun handleGoogleSignInResult(data: Intent?) = viewModelScope.launch {
         try {
-            _googleSignInState.send(SignInState(isLoading = true))
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             val account = task.getResult(ApiException::class.java)
             repository.connectWithGoogle(account).collect { result ->

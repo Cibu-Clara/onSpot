@@ -37,7 +37,6 @@ class SignUpViewModel : ViewModel() {
 
     fun handleGoogleSignUpResult(data: Intent?) = viewModelScope.launch {
         try {
-            _googleSignUpState.send(SignUpState(isLoading = true))
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             val account = task.getResult(ApiException::class.java)
             repository.connectWithGoogle(account).collect { result ->
