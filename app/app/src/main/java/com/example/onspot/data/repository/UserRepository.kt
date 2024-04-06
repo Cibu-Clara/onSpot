@@ -1,5 +1,6 @@
 package com.example.onspot.data.repository
 
+import android.net.Uri
 import com.example.onspot.data.model.User
 import com.example.onspot.utils.Resource
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -18,4 +19,7 @@ interface UserRepository {
     fun sendPasswordResetEmail(email: String): Flow<Resource<Void?>>
     fun changePassword(currentPassword: String, newPassword: String): Flow<Resource<Void?>>
     suspend fun getCurrentUserAuthProvider(): String?
+    fun getCurrentUserDetails(): Flow<Resource<User>>
+    fun updateUserProfilePicture(imageUri: Uri): Flow<Resource<String>>
+    fun deleteUserProfilePicture(): Flow<Resource<Void?>>
 }

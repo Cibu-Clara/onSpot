@@ -2,7 +2,9 @@ package com.example.onspot.ui.screens.main
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.fillMaxSize
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.Scaffold
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -28,7 +30,7 @@ fun OfferScreen(
     ) {
         Scaffold(
             topBar = {
-                CustomTopBar(title = "Offer you parking spot",)
+                CustomTopBar(title = "Offer your parking spot",)
             },
             bottomBar = {
                 BottomNavigationBar(

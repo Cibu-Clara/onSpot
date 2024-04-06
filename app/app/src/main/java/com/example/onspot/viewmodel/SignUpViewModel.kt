@@ -24,7 +24,7 @@ class SignUpViewModel : ViewModel() {
     val googleSignUpState = _googleSignUpState.receiveAsFlow()
 
     fun registerUser(email: String, password: String, firstName: String, lastName: String) = viewModelScope.launch {
-        val newUser = User(uuid = "", firstName = firstName, lastName = lastName, email = email, isAdmin = false)
+        val newUser = User(uuid = "", firstName = firstName, lastName = lastName, email = email, isAdmin = false, creationTimestamp = 0L)
 
         repository.registerUser(email, password, newUser).collect { result ->
             when(result) {

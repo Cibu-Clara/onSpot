@@ -73,6 +73,7 @@ dependencies {
 
     //  Compose
     implementation("androidx.compose.material:material-icons-extended:1.6.5")
+    implementation ("androidx.compose.material3:material3:1.3.0-alpha04")
 
     //  Firebase
     implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
@@ -80,7 +81,11 @@ dependencies {
     implementation("com.google.firebase:firebase-auth:22.3.1")
     implementation("com.google.firebase:firebase-firestore-ktx:24.11.0")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
+    implementation("com.google.firebase:firebase-storage-ktx")
 
     //  NavController
     implementation ("androidx.navigation:navigation-compose:2.7.7")
+
+    // Image Painter
+    implementation ("io.coil-kt:coil-compose:2.4.0")
 }

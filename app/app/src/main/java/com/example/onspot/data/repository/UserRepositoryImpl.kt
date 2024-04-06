@@ -1,5 +1,6 @@
 package com.example.onspot.data.repository
 
+import android.net.Uri
 import com.example.onspot.data.model.User
 import com.example.onspot.utils.Resource
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -12,6 +13,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
@@ -21,6 +23,7 @@ class UserRepositoryImpl : UserRepository {
     private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
     private val usersCollection: CollectionReference =
         FirebaseFirestore.getInstance().collection("users")
+    private val storageReference = FirebaseStorage.getInstance().reference
 
     override fun loginWithEmailAndPassword(email: String, password: String): Flow<Resource<AuthResult>> {
         return flow {
@@ -39,13 +42,16 @@ class UserRepositoryImpl : UserRepository {
             val authResult = firebaseAuth.signInWithCredential(credential).await()
             val firebaseUser = authResult.user ?: throw Exception("Authentication failed. Please check your credentials and try again.")
 
+            val creationTimestamp = System.currentTimeMillis()
+
             if (authResult.additionalUserInfo?.isNewUser == true) {
                 val user = User(
                     uuid = firebaseUser.uid,
                     firstName = account.givenName ?: "",
                     lastName = account.familyName ?: "",
                     email = firebaseUser.email!!,
-                    isAdmin = false
+                    isAdmin = false,
+                    creationTimestamp = creationTimestamp
                 )
                 usersCollection
                     .document(firebaseUser.uid)
@@ -74,9 +80,10 @@ class UserRepositoryImpl : UserRepository {
             emit(Resource.Loading())
             val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
             val userId = result.user!!.uid
+            val creationTimestamp = System.currentTimeMillis()
             usersCollection
                 .document(userId)
-                .set(user.copy(uuid = userId))
+                .set(user.copy(uuid = userId, creationTimestamp = creationTimestamp))
                 .await()
             emit(Resource.Success(result))
         }.catch {
@@ -150,5 +157,62 @@ class UserRepositoryImpl : UserRepository {
     override suspend fun getCurrentUserAuthProvider(): String? {
         return firebaseAuth.currentUser?.providerData
             ?.firstOrNull { it.providerId != "firebase" }?.providerId
+    }
+
+    override fun getCurrentUserDetails(): Flow<Resource<User>> = flow {
+        emit(Resource.Loading())
+        val currentUser = firebaseAuth.currentUser
+        if (currentUser != null) {
+            val userDocument = usersCollection
+                .document(currentUser.uid)
+                .get()
+                .await()
+            val user = userDocument.toObject(User::class.java)
+            if (user != null) {
+                emit(Resource.Success(user))
+            } else {
+                emit(Resource.Error("User not found"))
+            }
+        } else {
+            emit(Resource.Error("No user logged in"))
+        }
+    }.catch { e ->
+        emit(Resource.Error(e.message ?: "An error occurred"))
+    }
+
+    override fun updateUserProfilePicture(imageUri: Uri): Flow<Resource<String>> = flow {
+        emit(Resource.Loading())
+        val user = firebaseAuth.currentUser ?: throw Exception("User not logged in")
+        val imageRef = storageReference.child("profilePictures/${user.uid}")
+
+        val uploadTaskSnapshot = imageRef.putFile(imageUri).await()
+        val downloadUri = uploadTaskSnapshot
+            .storage
+            .downloadUrl
+            .await()
+
+        usersCollection
+            .document(user.uid)
+            .update("profilePictureUrl", downloadUri.toString())
+            .await()
+
+        emit(Resource.Success(downloadUri.toString()))
+    }.catch { e ->
+        emit(Resource.Error(e.message ?: "Failed to update profile picture"))
+    }
+
+    override fun deleteUserProfilePicture(): Flow<Resource<Void?>> = flow {
+        try {
+            emit(Resource.Loading())
+            val user = firebaseAuth.currentUser ?: throw Exception("User not logged in")
+            val imageRef = storageReference.child("profilePictures/${user.uid}")
+
+            imageRef.delete().await()
+            usersCollection.document(user.uid).update("profilePictureUrl", "").await()
+
+            emit(Resource.Success(null))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Failed to delete profile picture"))
+        }
     }
 }

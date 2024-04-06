@@ -1,7 +1,10 @@
 package com.example.onspot.ui.components
 
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.Tab
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.TabRow
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.TopAppBar
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -19,11 +22,14 @@ fun CustomTopBar(
     title: String
 ) {
     TopAppBar (
-        title = { Text(
-            text = title,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp) },
+        title = {
+            Text(
+                text = title,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+        },
         backgroundColor = purple
     )
 }

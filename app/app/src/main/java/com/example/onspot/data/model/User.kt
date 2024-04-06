@@ -5,7 +5,9 @@ data class User(
     val firstName: String,
     val lastName: String,
     val email: String,
-    val isAdmin: Boolean
+    val isAdmin: Boolean,
+    val creationTimestamp: Long,
+    val profilePictureUrl: String = ""
 ){
-    constructor() : this("", "", "", "", false)
+    constructor() : this("", "", "", "", false, 0L, "")
 }
