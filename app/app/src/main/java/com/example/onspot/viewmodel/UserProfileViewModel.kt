@@ -132,7 +132,6 @@ class UserProfileViewModel : ViewModel() {
                         _deleteProfilePictureState.send(ProfilePictureState(isSuccess = "Profile picture successfully deleted"))
                     } else {
                         _deleteProfilePictureState.send(ProfilePictureState(isError = "Cannot delete profile picture"))
-
                     }
                 }
                 is Resource.Error -> { _deleteProfilePictureState.send(ProfilePictureState(isError = result.message)) }
