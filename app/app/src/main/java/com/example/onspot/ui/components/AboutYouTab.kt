@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -52,6 +54,7 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.onspot.R
 import com.example.onspot.data.model.User
+import com.example.onspot.navigation.Screens
 import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.ui.theme.lightPurple
 import com.example.onspot.ui.theme.purple
@@ -82,7 +85,7 @@ fun AboutYouTab(
             }
         }
         is Resource.Success -> {
-            UserInfo(userDetails.data!!, showBottomSheet)
+            UserInfo(navController, userDetails.data!!, showBottomSheet)
         }
         is Resource.Error -> {
             LaunchedEffect(key1 = true) {
@@ -134,7 +137,11 @@ fun AboutYouTab(
 }
 
 @Composable
-fun UserInfo(user: User, showBottomSheet: () -> Unit) {
+fun UserInfo(
+    navController: NavController,
+    user: User,
+    showBottomSheet: () -> Unit)
+{
     val signUpDate = user.creationTimestamp.let { timestamp ->
         val date = Date(timestamp)
         SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(date)
@@ -146,6 +153,7 @@ fun UserInfo(user: User, showBottomSheet: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         UserInfoRow(
+            navController = navController,
             firstName = user.firstName,
             signUpDate = signUpDate,
             profilePictureUrl = user.profilePictureUrl,
@@ -167,74 +175,90 @@ fun UserInfo(user: User, showBottomSheet: () -> Unit) {
 
 @Composable
 fun UserInfoRow(
+    navController: NavController,
     firstName: String,
     signUpDate: String,
     profilePictureUrl: String,
     showBottomSheet: () -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp)
     ) {
-        Column(
-            horizontalAlignment = Alignment.Start
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = firstName,
-                fontWeight = FontWeight.Bold,
-                fontFamily = RegularFont,
-                fontSize = 27.sp,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-            Text(
-                text = "member since $signUpDate",
-                fontFamily = RegularFont,
-                color = Color.DarkGray
-            )
-        }
-        Box {
-            if (profilePictureUrl.isNotEmpty()) {
-                Image(
-                    painter = rememberAsyncImagePainter(profilePictureUrl),
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier
-                        .size(97.dp)
-                        .clip(CircleShape)
-                        .border(2.dp, Color.LightGray, CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_user_picture),
-                    contentDescription = "Default Profile Picture",
-                    modifier = Modifier
-                        .size(97.dp)
-                        .background(lightPurple, CircleShape)
-                        .clip(CircleShape)
-                        .border(2.dp, Color.LightGray, CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            IconButton(
-                onClick = { showBottomSheet() },
-                modifier = Modifier
-                    .size(30.dp)
-                    .clip(CircleShape)
-                    .align(Alignment.BottomEnd),
-                colors = IconButtonDefaults.iconButtonColors(Color.LightGray)
+            Column(
+                horizontalAlignment = Alignment.Start
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_edit),
-                    contentDescription = null,
-                    modifier = Modifier.size(17.dp),
-                    tint = purple
+                Text(
+                    text = firstName,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = RegularFont,
+                    fontSize = 27.sp,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Text(
+                    text = "member since $signUpDate",
+                    fontFamily = RegularFont,
+                    color = Color.DarkGray
                 )
             }
+            Box {
+                if (profilePictureUrl.isNotEmpty()) {
+                    Image(
+                        painter = rememberAsyncImagePainter(profilePictureUrl),
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier
+                            .size(97.dp)
+                            .clip(CircleShape)
+                            .border(2.dp, Color.LightGray, CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_user_picture),
+                        contentDescription = "Default Profile Picture",
+                        modifier = Modifier
+                            .size(97.dp)
+                            .background(lightPurple, CircleShape)
+                            .clip(CircleShape)
+                            .border(2.dp, Color.LightGray, CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                IconButton(
+                    onClick = { showBottomSheet() },
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .align(Alignment.BottomEnd),
+                    colors = IconButtonDefaults.iconButtonColors(Color.LightGray)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_edit),
+                        contentDescription = null,
+                        modifier = Modifier.size(17.dp),
+                        tint = purple
+                    )
+                }
+            }
         }
+
+        // TODO(reviews)
+
+        Text(
+            modifier = Modifier
+                .padding(vertical = 10.dp)
+                .clickable { navController.navigate(Screens.PersonalDetailsScreen.route)},
+            text = "View personal details",
+            fontFamily = RegularFont,
+            color = purple
+        )
+        HorizontalDivider(color = Color.Gray, modifier = Modifier.weight(1f))
     }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

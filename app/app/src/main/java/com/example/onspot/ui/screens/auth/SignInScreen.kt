@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -67,6 +68,9 @@ fun SignInScreen(
     val isButtonEnabled = email.isNotBlank() && password.isNotBlank()
     var showEmailConfirmationDialog by rememberSaveable { mutableStateOf(false) }
 
+    val focusManager = LocalFocusManager.current
+    fun clearFocus() { focusManager.clearFocus() }
+
     Text(
         text = "Welcome back!",
         fontWeight = FontWeight.Bold,
@@ -77,6 +81,7 @@ fun SignInScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .clickable(onClick = { clearFocus() })
             .padding(start = 30.dp, end = 30.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally

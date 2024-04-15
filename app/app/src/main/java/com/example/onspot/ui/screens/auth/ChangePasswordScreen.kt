@@ -2,6 +2,7 @@ package com.example.onspot.ui.screens.auth
 
 import android.annotation.SuppressLint
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -55,6 +57,9 @@ fun ChangePasswordScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val state = userProfileViewModel.changePasswordState.collectAsState(initial = null)
+
+    val focusManager = LocalFocusManager.current
+    fun clearFocus() { focusManager.clearFocus() }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -91,12 +96,11 @@ fun ChangePasswordScreen(
                     color = Color.Gray,
                     fontSize = 16.sp
                 )
-                Spacer(modifier = Modifier.weight(0.4f))
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clickable( onClick = { clearFocus() })
                         .padding(horizontal = 30.dp),
-                    verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     CustomPasswordField(

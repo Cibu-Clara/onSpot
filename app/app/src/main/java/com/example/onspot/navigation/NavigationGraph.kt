@@ -11,6 +11,7 @@ import com.example.onspot.ui.screens.auth.SignUpScreen
 import com.example.onspot.ui.screens.auth.OpeningScreen
 import com.example.onspot.ui.screens.main.InboxScreen
 import com.example.onspot.ui.screens.main.OfferScreen
+import com.example.onspot.ui.screens.main.PersonalDetailsScreen
 import com.example.onspot.ui.screens.main.PostsScreen
 import com.example.onspot.ui.screens.main.UserProfileScreen
 import com.example.onspot.ui.screens.main.SearchScreen
@@ -56,6 +57,9 @@ fun NavigationGraph(
 
         // Change Password Screen
         composable(route = Screens.ChangePasswordScreen.route) { ChangePasswordScreen(navController) }
+
+        // Personal Details Screen
+        composable(route = Screens.PersonalDetailsScreen.route) { PersonalDetailsScreen(navController) }
     }
 
 }

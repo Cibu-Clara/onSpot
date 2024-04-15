@@ -47,6 +47,7 @@ fun CustomTextField(
     onValueChange: (String) -> Unit,
     label: String,
     keyboardType: KeyboardType = KeyboardType.Text,
+    isEnabled: Boolean = true
 ) {
     OutlinedTextField(
         value = value,
@@ -58,6 +59,7 @@ fun CustomTextField(
             focusedBorderColor = Color.Gray,
             cursorColor = Color.Gray
         ),
+        enabled = isEnabled,
         shape = RoundedCornerShape(8.dp),
         singleLine = true,
         maxLines = 1,
