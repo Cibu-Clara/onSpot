@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForwardIos
@@ -63,7 +64,7 @@ fun SettingsTab(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 15.dp, vertical = 15.dp),
+            .padding(horizontal = 25.dp, vertical = 20.dp),
     ) {
         settingsOptions.forEachIndexed { index, option ->
             Row(
@@ -92,11 +93,11 @@ fun SettingsTab(
                             "Log out" -> { showLogoutDialog = true }
                         }
                     }
-                    .padding(bottom = 8.dp)
+                    .padding(bottom = 10.dp)
             ) {
                 Text(
                     text = option,
-                    fontSize = 20.sp,
+                    fontSize = 16.sp,
                     color = if (option == "Delete account" || option == "Log out") purple else Color.DarkGray,
                     modifier = Modifier.weight(0.9f)
                 )
@@ -104,14 +105,16 @@ fun SettingsTab(
                     Icon(
                         imageVector = Icons.Default.ArrowForwardIos,
                         contentDescription = null,
-                        modifier = Modifier.weight(0.1f),
+                        modifier = Modifier
+                            .weight(0.1f)
+                            .size(16.dp),
                         tint = Color.DarkGray
                     )
                 }
             }
             if (index < settingsOptions.size - 2) {
                 Divider()
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
             }
         }
         Row(

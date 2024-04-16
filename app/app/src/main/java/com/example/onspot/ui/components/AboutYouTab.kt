@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -140,8 +138,8 @@ fun AboutYouTab(
 fun UserInfo(
     navController: NavController,
     user: User,
-    showBottomSheet: () -> Unit)
-{
+    showBottomSheet: () -> Unit
+) {
     val signUpDate = user.creationTimestamp.let { timestamp ->
         val date = Date(timestamp)
         SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(date)
@@ -159,17 +157,8 @@ fun UserInfo(
             profilePictureUrl = user.profilePictureUrl,
             showBottomSheet = showBottomSheet
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        Row {
-            repeat(5) {
-                Icon(Icons.Filled.Star, contentDescription = "Star", tint = Color.Yellow)
-            }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Bio: Enthusiastic traveler and adventure seeker. Love sharing journeys with new friends.",
-            textAlign = TextAlign.Center
-        )
+        VerifiedProfile(navController = navController)
+        ParkingSpots()
     }
 }
 
@@ -182,7 +171,7 @@ fun UserInfoRow(
     showBottomSheet: () -> Unit
 ) {
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp)
+        modifier = Modifier.padding(horizontal = 10.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -250,15 +239,62 @@ fun UserInfoRow(
 
         Text(
             modifier = Modifier
-                .padding(vertical = 10.dp)
-                .clickable { navController.navigate(Screens.PersonalDetailsScreen.route)},
+                .padding(bottom = 15.dp, top = 10.dp)
+                .clickable { navController.navigate(Screens.PersonalDetailsScreen.route) },
             text = "View personal details",
             fontFamily = RegularFont,
             color = purple
         )
-        HorizontalDivider(color = Color.Gray, modifier = Modifier.weight(1f))
+        HorizontalDivider()
     }
+}
 
+@Composable
+fun VerifiedProfile(
+    navController: NavController
+) {
+    val isIDValidated = false
+    val isEmailVerified = false
+    val isNumberVerified = false
+
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 10.dp, vertical = 15.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text(
+            text = if (isIDValidated && isEmailVerified && isNumberVerified)"You have a verified profile"
+                    else "Verify your profile",
+            fontWeight = FontWeight.Bold,
+            fontFamily = RegularFont,
+            fontSize = 20.sp,
+            modifier = Modifier.padding(bottom = 15.dp)
+        )
+        IconWithText(text = if (isIDValidated) "Validated ID" else "Validate your ID", isVerified = isIDValidated)
+        IconWithText(text = if (isEmailVerified) "email" else "Confirm your email address", isVerified = isEmailVerified)
+        IconWithText(text = if (isNumberVerified) "phone number" else "Confirm your phone number", isVerified = isNumberVerified)
+        HorizontalDivider()
+    }
+}
+
+@Composable
+fun ParkingSpots(
+
+) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 10.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text(
+            text = "Your parking spots",
+            fontWeight = FontWeight.Bold,
+            fontFamily = RegularFont,
+            fontSize = 20.sp,
+            modifier = Modifier.padding(bottom = 15.dp)
+        )
+        IconWithText(text = "Add a parking spot", isVerified = false)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -347,7 +383,7 @@ fun BottomSheetButton(
     contentDescription: String?,
     onClick: () -> Unit,
     textColor: Color = MaterialTheme.colorScheme.primary,
-    textAlign: TextAlign,// Default text color
+    textAlign: TextAlign,
     iconColor: Color = MaterialTheme.colorScheme.primary
 ) {
     TextButton(

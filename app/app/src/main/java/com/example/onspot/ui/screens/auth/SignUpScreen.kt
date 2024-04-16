@@ -83,7 +83,7 @@ fun SignUpScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-                text = "Hi there!",
+            text = "Hi there!",
             fontWeight = FontWeight.Bold,
             fontSize = 40.sp,
             color = purple,
