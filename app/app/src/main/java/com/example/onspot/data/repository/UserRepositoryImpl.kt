@@ -215,4 +215,18 @@ class UserRepositoryImpl : UserRepository {
             emit(Resource.Error(e.message ?: "Failed to delete profile picture"))
         }
     }
+
+    override fun updateUserDetails(userId: String, firstName: String, lastName: String): Flow<Resource<Void?>> = flow {
+        try {
+            emit(Resource.Loading())
+            val updates = mapOf(
+                "firstName" to firstName,
+                "lastName" to lastName
+            )
+            usersCollection.document(userId).update(updates).await()
+            emit(Resource.Success(null))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Failed to update user details"))
+        }
+    }
 }

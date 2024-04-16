@@ -6,9 +6,13 @@ import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -19,7 +23,8 @@ import com.example.onspot.ui.theme.purple
 
 @Composable
 fun CustomTopBar(
-    title: String
+    title: String,
+    onBackClick: (() -> Unit)? = null
 ) {
     TopAppBar (
         title = {
@@ -30,6 +35,17 @@ fun CustomTopBar(
                 fontSize = 20.sp
             )
         },
+        navigationIcon = if (onBackClick != null) { // Show the back button if onBackClick is not null
+            {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White
+                    )
+                }
+            }
+        } else { null },
         backgroundColor = purple
     )
 }

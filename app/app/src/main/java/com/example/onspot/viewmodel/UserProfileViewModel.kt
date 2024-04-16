@@ -10,6 +10,7 @@ import com.example.onspot.ui.states.ChangePasswordState
 import com.example.onspot.ui.states.DeleteAccountState
 import com.example.onspot.ui.states.ProfilePictureState
 import com.example.onspot.ui.states.SignOutState
+import com.example.onspot.ui.states.UpdateUserDetailsState
 import com.example.onspot.utils.Resource
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import kotlinx.coroutines.channels.Channel
@@ -39,6 +40,9 @@ class UserProfileViewModel : ViewModel() {
 
     private val _deleteProfilePictureState = Channel<ProfilePictureState>()
     val deleteProfilePictureState = _deleteProfilePictureState.receiveAsFlow()
+
+    private val _updateUserDetailsState = Channel<UpdateUserDetailsState>()
+    val updateUserDetailsState = _updateUserDetailsState.receiveAsFlow()
 
     init {
         fetchCurrentUserDetails()
@@ -89,7 +93,6 @@ class UserProfileViewModel : ViewModel() {
         when (userRepository.getCurrentUserAuthProvider()) {
             "password" -> { callback(true, null) }
             "google.com" -> { callback(false, "For security reasons, please change your password directly via Google's account management.") }
-            "facebook.com" -> { callback(false, "For security reasons, please change your password directly via Facebook's account management.") }
         }
     }
 
@@ -135,6 +138,23 @@ class UserProfileViewModel : ViewModel() {
                     }
                 }
                 is Resource.Error -> { _deleteProfilePictureState.send(ProfilePictureState(isError = result.message)) }
+            }
+        }
+    }
+
+    fun updateUserDetails(firstName: String, lastName: String) = viewModelScope.launch {
+        val currentUser = userDetails.value.data
+        if (currentUser != null) {
+            userRepository.updateUserDetails(currentUser.uuid, firstName, lastName).collect { result ->
+                when (result) {
+                    is Resource.Loading -> { _updateUserDetailsState.send(UpdateUserDetailsState(isLoading = true)) }
+                    is Resource.Success -> {
+                        val updatedUser = currentUser.copy(firstName = firstName, lastName = lastName)
+                        _userDetails.value = Resource.Success(updatedUser)
+                        _updateUserDetailsState.send(UpdateUserDetailsState(isSuccess = "User details successfully updated"))
+                    }
+                    is Resource.Error -> { _updateUserDetailsState.send(UpdateUserDetailsState(isError = result.message)) }
+                }
             }
         }
     }
