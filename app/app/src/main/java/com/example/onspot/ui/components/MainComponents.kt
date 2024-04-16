@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -140,7 +139,7 @@ fun CustomAlertDialog(
 fun IconWithText(
     text: String,
     isVerified: Boolean,
-    isAddIcon: Boolean,
+    isAddIcon: Boolean = true,
     onAddAction: () -> Unit = {}
 ) {
     Row(
@@ -155,7 +154,7 @@ fun IconWithText(
                             else if (isAddIcon) Icons.Default.AddCircleOutline
                             else Icons.Outlined.WarningAmber,
             contentDescription = if (isVerified) "Verified" else "Add",
-            tint = purple,
+            tint = if(isVerified || isAddIcon) purple else Color.Red,
             modifier = Modifier
                 .padding(end = 8.dp)
                 .clickable(enabled = isVerified, onClick = onAddAction)
