@@ -11,10 +11,11 @@ import com.example.onspot.ui.screens.auth.SignUpScreen
 import com.example.onspot.ui.screens.auth.OpeningScreen
 import com.example.onspot.ui.screens.main.InboxScreen
 import com.example.onspot.ui.screens.main.OfferScreen
-import com.example.onspot.ui.screens.main.PersonalDetailsScreen
+import com.example.onspot.ui.screens.secondary.PersonalDetailsScreen
 import com.example.onspot.ui.screens.main.PostsScreen
 import com.example.onspot.ui.screens.main.UserProfileScreen
 import com.example.onspot.ui.screens.main.SearchScreen
+import com.example.onspot.ui.screens.secondary.AddParkingSpotScreen
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -60,6 +61,9 @@ fun NavigationGraph(
 
         // Personal Details Screen
         composable(route = Screens.PersonalDetailsScreen.route) { PersonalDetailsScreen(navController) }
+
+        // Add Parking Spot Screen
+        composable(route = Screens.AddParkingSpotScreen.route) { AddParkingSpotScreen(navController) }
     }
 
 }

@@ -1,0 +1,38 @@
+package com.example.onspot.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.onspot.data.model.ParkingSpot
+import com.example.onspot.data.repository.ParkingSpotRepository
+import com.example.onspot.data.repository.ParkingSpotRepositoryImpl
+import com.example.onspot.ui.states.AddParkingSpotState
+import com.example.onspot.utils.Resource
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
+import java.util.UUID
+
+class ParkingSpotViewModel : ViewModel() {
+    private val parkingSpotRepository: ParkingSpotRepository = ParkingSpotRepositoryImpl()
+
+    private val _addParkingSpotState = Channel<AddParkingSpotState>()
+    val addParkingSpotState = _addParkingSpotState.receiveAsFlow()
+
+    fun addParkingSpot(address: String, number: Int) = viewModelScope.launch {
+        val parkingSpot = ParkingSpot(
+            uuid = UUID.randomUUID().toString(),
+            address = address,
+            number = number,
+            isApproved = false,
+            isReserved = false,
+            userId = ""
+        )
+        parkingSpotRepository.addParkingSpot(parkingSpot).collect { result ->
+            when(result) {
+                is Resource.Loading -> { _addParkingSpotState.send(AddParkingSpotState(isLoading = true)) }
+                is Resource.Success -> { _addParkingSpotState.send(AddParkingSpotState(isSuccess = "Parking spot successfully added")) }
+                is Resource.Error -> { _addParkingSpotState.send(AddParkingSpotState(isError = result.message)) }
+            }
+        }
+    }
+}

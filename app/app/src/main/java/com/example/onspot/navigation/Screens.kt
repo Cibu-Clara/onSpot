@@ -14,6 +14,7 @@ sealed class Screens(val route: String) {
     object InboxScreen : Screens(route = "InboxScreen")
     object UserProfileScreen : Screens(route = "UserProfileScreen")
 
-    // anexe
+    // secondary screens
     object PersonalDetailsScreen : Screens(route = "PersonalDetailsScreen")
+    object AddParkingSpotScreen : Screens(route = "AddParkingSpotScreen")
 }

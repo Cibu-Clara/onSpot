@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
@@ -169,7 +170,9 @@ fun CustomClickableText(
         fontWeight = FontWeight.Bold,
         fontFamily = RegularFont,
         color = purple,
-        modifier = modifier.clickable { onClick() }
+        modifier = modifier
+            .clip(shape = RoundedCornerShape(10.dp))
+            .clickable { onClick() }
     )
 }
 

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Delete
@@ -158,7 +159,7 @@ fun UserInfo(
             showBottomSheet = showBottomSheet
         )
         VerifiedProfile(navController = navController)
-        ParkingSpots()
+        ParkingSpots(navController = navController)
     }
 }
 
@@ -240,6 +241,7 @@ fun UserInfoRow(
         Text(
             modifier = Modifier
                 .padding(bottom = 15.dp, top = 10.dp)
+                .clip(shape = RoundedCornerShape(10.dp))
                 .clickable { navController.navigate(Screens.PersonalDetailsScreen.route) },
             text = "View personal details",
             fontFamily = RegularFont,
@@ -279,7 +281,7 @@ fun VerifiedProfile(
 
 @Composable
 fun ParkingSpots(
-
+    navController: NavController
 ) {
     Column(
         modifier = Modifier
@@ -293,7 +295,11 @@ fun ParkingSpots(
             fontSize = 20.sp,
             modifier = Modifier.padding(bottom = 15.dp)
         )
-        IconWithText(text = "Add a parking spot", isVerified = false)
+        IconWithText(
+            text = "Add a parking spot",
+            isVerified = false,
+            onAddAction = { navController.navigate(Screens.AddParkingSpotScreen.route) }
+        )
     }
 }
 
