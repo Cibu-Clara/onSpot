@@ -3,7 +3,10 @@ package com.example.onspot.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.onspot.data.model.ParkingSpot
 import com.example.onspot.data.model.User
+import com.example.onspot.data.repository.ParkingSpotRepository
+import com.example.onspot.data.repository.ParkingSpotRepositoryImpl
 import com.example.onspot.data.repository.UserRepository
 import com.example.onspot.data.repository.UserRepositoryImpl
 import com.example.onspot.ui.states.ChangePasswordState
@@ -15,16 +18,23 @@ import com.example.onspot.utils.Resource
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class UserProfileViewModel : ViewModel() {
     private val userRepository: UserRepository = UserRepositoryImpl()
+    private val parkingSpotRepository: ParkingSpotRepository = ParkingSpotRepositoryImpl()
 
     private val _userDetails = MutableStateFlow<Resource<User>>(Resource.Loading())
     val userDetails: StateFlow<Resource<User>> = _userDetails.asStateFlow()
+
+    private val _parkingSpots = MutableStateFlow<Resource<List<ParkingSpot>>>(Resource.Loading())
+    val parkingSpots: StateFlow<Resource<List<ParkingSpot>>> = _parkingSpots.asStateFlow()
 
     private val _deleteAccountState = Channel<DeleteAccountState>()
     val deleteAccountState = _deleteAccountState.receiveAsFlow()
@@ -44,13 +54,37 @@ class UserProfileViewModel : ViewModel() {
     private val _updateUserDetailsState = Channel<UpdateUserDetailsState>()
     val updateUserDetailsState = _updateUserDetailsState.receiveAsFlow()
 
+    val combinedLoadState: StateFlow<Resource<Pair<User, List<ParkingSpot>>>> =
+        combine(_userDetails, _parkingSpots) { userDetails, parkingSpots ->
+            when {
+                userDetails is Resource.Loading || parkingSpots is Resource.Loading -> Resource.Loading()
+                userDetails is Resource.Error -> Resource.Error(userDetails.message ?: "Error fetching user details")
+                parkingSpots is Resource.Error -> Resource.Error(parkingSpots.message ?: "Error fetching parking spots")
+                userDetails is Resource.Success && parkingSpots is Resource.Success -> {
+                    if (userDetails.data != null && parkingSpots.data != null) {
+                        Resource.Success(Pair(userDetails.data, parkingSpots.data))
+                    } else {
+                        Resource.Error("Incomplete data")
+                    }
+                }
+                else -> Resource.Error("Unexpected error")
+            }
+        }.stateIn(viewModelScope, SharingStarted.Lazily, Resource.Loading())
+
     init {
         fetchCurrentUserDetails()
+        fetchParkingSpots()
     }
 
     private fun fetchCurrentUserDetails() = viewModelScope.launch {
         userRepository.getCurrentUserDetails().collect { userDetailsResource ->
             _userDetails.value = userDetailsResource
+        }
+    }
+
+    private fun fetchParkingSpots() = viewModelScope.launch {
+        parkingSpotRepository.getParkingSpots().collect { parkingSpotsResource ->
+            _parkingSpots.value = parkingSpotsResource
         }
     }
 

@@ -6,4 +6,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface ParkingSpotRepository {
     fun addParkingSpot(parkingSpot: ParkingSpot): Flow<Resource<Void?>>
+    fun getParkingSpots(): Flow<Resource<List<ParkingSpot>>>
 }

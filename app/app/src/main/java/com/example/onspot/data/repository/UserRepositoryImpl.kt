@@ -177,7 +177,7 @@ class UserRepositoryImpl : UserRepository {
             emit(Resource.Error("No user logged in"))
         }
     }.catch { e ->
-        emit(Resource.Error(e.message ?: "An error occurred"))
+        emit(Resource.Error(e.message ?: "Failed to fetch user details"))
     }
 
     override fun updateUserProfilePicture(imageUri: Uri): Flow<Resource<String>> = flow {

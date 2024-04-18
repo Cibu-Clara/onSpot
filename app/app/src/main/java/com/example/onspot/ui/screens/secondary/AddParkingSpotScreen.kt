@@ -75,7 +75,11 @@ fun AddParkingSpotScreen(
                 )
             }
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(onClick = { clearFocus() })
+            ) {
                 Text(
                     text = "Please provide the required details to identify your parking spot, including a document to attest" +
                             " your ownership or legal right to use the space, such as a rental agreement or purchase contract. ",
@@ -88,7 +92,6 @@ fun AddParkingSpotScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clickable(onClick = { clearFocus() })
                         .padding(horizontal = 30.dp)
                 ) {
                     CustomTextField(

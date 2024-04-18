@@ -29,4 +29,18 @@ class ParkingSpotRepositoryImpl : ParkingSpotRepository {
             emit(Resource.Error(e.message ?: "Failed to add parking spot"))
         }
     }
+
+    override fun getParkingSpots(): Flow<Resource<List<ParkingSpot>>> = flow {
+        try {
+            emit(Resource.Loading())
+            val snapshot = parkingSpotsCollection
+                .whereEqualTo("userId", currentUserId)
+                .get()
+                .await()
+            val parkingSpots = snapshot.documents.mapNotNull { it.toObject(ParkingSpot::class.java) }
+            emit(Resource.Success(parkingSpots))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Failed to fetch parking spots"))
+        }
+    }
 }
