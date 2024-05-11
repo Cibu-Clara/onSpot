@@ -1,6 +1,9 @@
 package com.example.onspot.ui.components
 
 //noinspection UsingMaterialAndMaterial3Libraries
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -168,3 +171,21 @@ fun IconWithText(
         )
     }
 }
+
+@Composable
+fun PDFFilePicker(
+    isButtonEnabled: Boolean,
+    onFilePicked: (Uri?) -> Unit
+) {
+    val pdfPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? -> onFilePicked(uri) }
+
+    Button(
+        enabled = isButtonEnabled,
+        onClick = { pdfPickerLauncher.launch("application/pdf") }
+    ) {
+        Text("Upload PDF document")
+    }
+}
+

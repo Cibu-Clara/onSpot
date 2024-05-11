@@ -68,61 +68,74 @@ fun AboutYouTab(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    when (combinedState) {
-        is Resource.Loading -> {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                CircularProgressIndicator()
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        item {
+            when (combinedState) {
+                is Resource.Loading -> {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        CircularProgressIndicator()
+                    }
+                }
+                is Resource.Success -> {
+                    val (user, parkingSpots) = combinedState.data!!
+                    UserInfo(navController, user, parkingSpots, showBottomSheet)
+                }
+                is Resource.Error -> {
+                    val errorMessage = combinedState.message
+                    LaunchedEffect(key1 = combinedState) {
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+                    }
+                }
             }
         }
-        is Resource.Success -> {
-            val (user, parkingSpots) = combinedState.data!!
-            UserInfo(navController, user, parkingSpots, showBottomSheet)
-        }
-        is Resource.Error -> {
-            val errorMessage = combinedState.message
-            LaunchedEffect(key1 = combinedState) {
-                Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                if (changeProfilePictureState.value?.isLoading == true || deleteProfilePictureState.value?.isLoading == true) {
+                    CircularProgressIndicator()
+                }
             }
         }
-    }
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        if (changeProfilePictureState.value?.isLoading == true || deleteProfilePictureState.value?.isLoading == true) {
-            CircularProgressIndicator()
-        }
-    }
-    LaunchedEffect(key1 = changeProfilePictureState.value?.isSuccess) {
-        scope.launch {
-            if (changeProfilePictureState.value?.isSuccess?.isNotEmpty() == true) {
-                val success = changeProfilePictureState.value?.isSuccess
-                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+        item {
+            LaunchedEffect(key1 = changeProfilePictureState.value?.isSuccess) {
+                scope.launch {
+                    if (changeProfilePictureState.value?.isSuccess?.isNotEmpty() == true) {
+                        val success = changeProfilePictureState.value?.isSuccess
+                        Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+                    }
+                }
             }
         }
-    }
-    LaunchedEffect(key1 = changeProfilePictureState.value?.isError) {
-        scope.launch {
-            if (changeProfilePictureState.value?.isError?.isNotEmpty() == true) {
-                val error = changeProfilePictureState.value?.isError
-                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+        item {
+            LaunchedEffect(key1 = changeProfilePictureState.value?.isError) {
+                scope.launch {
+                    if (changeProfilePictureState.value?.isError?.isNotEmpty() == true) {
+                        val error = changeProfilePictureState.value?.isError
+                        Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+                    }
+                }
             }
         }
-    }
-    LaunchedEffect(key1 = deleteProfilePictureState.value?.isSuccess) {
-        scope.launch {
-            if (deleteProfilePictureState.value?.isSuccess?.isNotEmpty() == true) {
-                val success = deleteProfilePictureState.value?.isSuccess
-                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+        item {
+            LaunchedEffect(key1 = deleteProfilePictureState.value?.isSuccess) {
+                scope.launch {
+                    if (deleteProfilePictureState.value?.isSuccess?.isNotEmpty() == true) {
+                        val success = deleteProfilePictureState.value?.isSuccess
+                        Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+                    }
+                }
             }
         }
-    }
-    LaunchedEffect(key1 = deleteProfilePictureState.value?.isError) {
-        scope.launch {
-            if (deleteProfilePictureState.value?.isError?.isNotEmpty() == true) {
-                val error = deleteProfilePictureState.value?.isError
-                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+        item {
+            LaunchedEffect(key1 = deleteProfilePictureState.value?.isError) {
+                scope.launch {
+                    if (deleteProfilePictureState.value?.isError?.isNotEmpty() == true) {
+                        val error = deleteProfilePictureState.value?.isError
+                        Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+                    }
+                }
             }
         }
     }
@@ -268,7 +281,7 @@ fun VerifiedProfile(
         )
         IconWithText(text = if (isIDValidated) "Validated ID" else "Validate your ID", isVerified = isIDValidated)
         IconWithText(text = if (isEmailVerified) "email" else "Confirm your email address", isVerified = isEmailVerified)
-        IconWithText(text = if (isNumberVerified) "phone number" else "Confirm your phone number", isVerified = isNumberVerified)
+        IconWithText(text = if (isNumberVerified) "phone number" else "Add your phone number", isVerified = isNumberVerified)
         HorizontalDivider()
     }
 }
@@ -290,7 +303,7 @@ fun ParkingSpots(
             fontSize = 20.sp,
             modifier = Modifier.padding(bottom = 15.dp)
         )
-        ParkingSpotsList(parkingSpots = parkingSpots)
+        ParkingSpotsList(navController = navController, parkingSpots = parkingSpots)
         IconWithText(
             text = "Add a parking spot",
             isVerified = false,
@@ -300,14 +313,16 @@ fun ParkingSpots(
 }
 
 @Composable
-fun ParkingSpotsList(parkingSpots: List<ParkingSpot>) {
-    LazyColumn {
-        items(parkingSpots.size) { index ->
-            val spot = parkingSpots[index]
+fun ParkingSpotsList(
+    navController: NavController,
+    parkingSpots: List<ParkingSpot>
+) {
+    Column() {
+        for (spot in parkingSpots){
             ParkingSpotListItem(
                 address = spot.address,
                 number = spot.number,
-                onItemClick = { }
+                onItemClick = { navController.navigate(Screens.ParkingSpotDetailsScreen.route) }
             )
         }
     }

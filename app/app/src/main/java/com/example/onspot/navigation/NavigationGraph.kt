@@ -16,6 +16,7 @@ import com.example.onspot.ui.screens.main.PostsScreen
 import com.example.onspot.ui.screens.main.UserProfileScreen
 import com.example.onspot.ui.screens.main.SearchScreen
 import com.example.onspot.ui.screens.secondary.AddParkingSpotScreen
+import com.example.onspot.ui.screens.secondary.ParkingSpotDetailsScreen
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -64,6 +65,8 @@ fun NavigationGraph(
 
         // Add Parking Spot Screen
         composable(route = Screens.AddParkingSpotScreen.route) { AddParkingSpotScreen(navController) }
-    }
 
+        // Parking Spot Details Screen
+        composable(route = Screens.ParkingSpotDetailsScreen.route) { ParkingSpotDetailsScreen(navController)}
+    }
 }

@@ -3,7 +3,6 @@ package com.example.onspot.ui.components
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
@@ -63,69 +63,77 @@ fun SettingsTab(
 
     val googleSignInClient = GoogleSignIn.getClient(context, GoogleSignInOptions.DEFAULT_SIGN_IN)
 
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 25.dp, vertical = 20.dp),
     ) {
         settingsOptions.forEachIndexed { index, option ->
-            Row(
-                modifier = Modifier
-                    .clip(shape = RoundedCornerShape(10.dp))
-                    .clickable {
-                        when (option) {
-                            "Change password" -> {
-                                userProfileViewModel.navigateForPasswordChange { canChangePass, message ->
-                                    if (canChangePass) {
-                                        navController.navigate(Screens.ChangePasswordScreen.route)
-                                    } else {
-                                        warningMessage = message ?: "Please try again."
-                                        showAuthenticationWarningDialog = true
+            item {
+                Row(
+                    modifier = Modifier
+                        .clip(shape = RoundedCornerShape(10.dp))
+                        .clickable {
+                            when (option) {
+                                "Change password" -> {
+                                    userProfileViewModel.navigateForPasswordChange { canChangePass, message ->
+                                        if (canChangePass) {
+                                            navController.navigate(Screens.ChangePasswordScreen.route)
+                                        } else {
+                                            warningMessage = message ?: "Please try again."
+                                            showAuthenticationWarningDialog = true
+                                        }
                                     }
                                 }
-                            }
-                            "Delete account" -> {
-                                userProfileViewModel.verifyAuthProvider { isEmailAuthenticated ->
-                                    if (isEmailAuthenticated) {
-                                        showPasswordConfirmationDialog = true
-                                    } else {
-                                        showDeleteAccountDialog = true
+
+                                "Delete account" -> {
+                                    userProfileViewModel.verifyAuthProvider { isEmailAuthenticated ->
+                                        if (isEmailAuthenticated) {
+                                            showPasswordConfirmationDialog = true
+                                        } else {
+                                            showDeleteAccountDialog = true
+                                        }
                                     }
                                 }
+
+                                "Log out" -> {
+                                    showLogoutDialog = true
+                                }
                             }
-                            "Log out" -> { showLogoutDialog = true }
                         }
-                    }
-                    .padding(bottom = 10.dp)
-            ) {
-                Text(
-                    text = option,
-                    fontSize = 16.sp,
-                    color = if (option == "Delete account" || option == "Log out") purple else Color.DarkGray,
-                    modifier = Modifier.weight(0.9f)
-                )
-                if (index < settingsOptions.size - 2) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .weight(0.1f)
-                            .size(16.dp),
-                        tint = Color.DarkGray
+                        .padding(bottom = 10.dp)
+                ) {
+                    Text(
+                        text = option,
+                        fontSize = 16.sp,
+                        color = if (option == "Delete account" || option == "Log out") purple else Color.DarkGray,
+                        modifier = Modifier.weight(0.9f)
                     )
+                    if (index < settingsOptions.size - 2) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .weight(0.1f)
+                                .size(16.dp),
+                            tint = Color.DarkGray
+                        )
+                    }
                 }
             }
             if (index < settingsOptions.size - 2) {
-                Divider()
-                Spacer(modifier = Modifier.height(10.dp))
+                item { Divider() }
+                item { Spacer(modifier = Modifier.height(10.dp)) }
             }
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            if (deleteAccountState.value?.isLoading == true || logoutState.value?.isLoading == true) {
-                CircularProgressIndicator()
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                if (deleteAccountState.value?.isLoading == true || logoutState.value?.isLoading == true) {
+                    CircularProgressIndicator()
+                }
             }
         }
     }

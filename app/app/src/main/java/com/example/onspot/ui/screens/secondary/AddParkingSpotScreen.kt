@@ -35,6 +35,7 @@ import com.example.onspot.navigation.Screens
 import com.example.onspot.ui.components.CustomButton
 import com.example.onspot.ui.components.CustomTextField
 import com.example.onspot.ui.components.CustomTopBar
+import com.example.onspot.ui.components.PDFFilePicker
 import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.viewmodel.ParkingSpotViewModel
 import kotlinx.coroutines.launch
@@ -47,7 +48,9 @@ fun AddParkingSpotScreen(
 ) {
     var address by rememberSaveable { mutableStateOf("") }
     var number by rememberSaveable { mutableStateOf("") }
-    val isButtonEnabled = address.isNotBlank() && number != ""
+    var documentUrl by rememberSaveable { mutableStateOf("") }
+    val isAddButtonEnabled = address.isNotBlank() && number.isNotBlank() && documentUrl.isNotBlank()
+    val isUploadButtonEnabled = documentUrl.isBlank()
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -55,6 +58,7 @@ fun AddParkingSpotScreen(
     fun clearFocus() { focusManager.clearFocus() }
 
     val addParkingSpotState = parkingSpotViewModel.addParkingSpotState.collectAsState(initial = null)
+    val uploadDocumentState = parkingSpotViewModel.uploadDocumentState.collectAsState(initial = null)
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -66,11 +70,15 @@ fun AddParkingSpotScreen(
                 CustomButton(
                     onClick = {
                         scope.launch {
-                            parkingSpotViewModel.addParkingSpot(address = address, number = number.toInt())
+                            parkingSpotViewModel.addParkingSpot(
+                                address = address,
+                                number = number.toInt(),
+                                documentUrl = documentUrl
+                            )
                         }
                     },
                     buttonText = "Add",
-                    enabled = isButtonEnabled,
+                    enabled = isAddButtonEnabled,
                     modifier = Modifier.padding(bottom = 30.dp)
                 )
             }
@@ -106,6 +114,13 @@ fun AddParkingSpotScreen(
                         keyboardType = KeyboardType.Number,
                         modifier = Modifier.padding(top = 10.dp)
                     )
+                    PDFFilePicker(
+                        isButtonEnabled = isUploadButtonEnabled,
+                        onFilePicked = { documentUri ->
+                        documentUri?.let {
+                            parkingSpotViewModel.uploadDocument(documentUri)
+                        }
+                    })
                 }
             }
         }
@@ -113,7 +128,7 @@ fun AddParkingSpotScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            if (addParkingSpotState.value?.isLoading == true) {
+            if (addParkingSpotState.value?.isLoading == true || uploadDocumentState.value?.isLoading == true) {
                 CircularProgressIndicator()
             }
         }
@@ -130,6 +145,23 @@ fun AddParkingSpotScreen(
             scope.launch {
                 if (addParkingSpotState.value?.isError?.isNotEmpty() == true) {
                     val error = addParkingSpotState.value?.isError
+                    Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+        LaunchedEffect(key1 = uploadDocumentState.value?.isSuccess) {
+            scope.launch {
+                if (uploadDocumentState.value?.isSuccess?.isNotEmpty() == true) {
+                    val success = uploadDocumentState.value?.isSuccess
+                    Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+                    documentUrl = uploadDocumentState.value!!.documentUrl.toString()
+                }
+            }
+        }
+        LaunchedEffect(key1 = uploadDocumentState.value?.isError) {
+            scope.launch {
+                if (uploadDocumentState.value?.isError?.isNotEmpty() == true) {
+                    val error = uploadDocumentState.value?.isError
                     Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
                 }
             }

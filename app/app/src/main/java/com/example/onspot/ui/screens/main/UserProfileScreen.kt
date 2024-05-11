@@ -29,6 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import android.Manifest
 import android.widget.Toast
+import androidx.compose.foundation.layout.padding
 import com.example.onspot.ui.components.AboutYouTab
 import com.example.onspot.ui.components.BottomNavigationBar
 import com.example.onspot.ui.components.CustomTabView
@@ -122,7 +123,7 @@ fun UserProfileScreen(
                 )
             }
         ) {
-            Column {
+            Column(modifier = Modifier.padding(it)) {
                 CustomTabView(
                     tabs = listOf("About you", "Settings"),
                     selectedTabIndex = selectedTabIndex,

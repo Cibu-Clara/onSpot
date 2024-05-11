@@ -17,4 +17,5 @@ sealed class Screens(val route: String) {
     // secondary screens
     object PersonalDetailsScreen : Screens(route = "PersonalDetailsScreen")
     object AddParkingSpotScreen : Screens(route = "AddParkingSpotScreen")
+    object ParkingSpotDetailsScreen : Screens(route = "ParkingSpotDetailsScreen")
 }
