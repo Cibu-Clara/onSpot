@@ -57,6 +57,7 @@ fun AddParkingSpotScreen(
 ) {
     var address by rememberSaveable { mutableStateOf("") }
     var number by rememberSaveable { mutableStateOf("") }
+    var additionalInfo by rememberSaveable { mutableStateOf("") }
     var documentUrl by rememberSaveable { mutableStateOf("") }
     var originalFileName by rememberSaveable { mutableStateOf("") }
     var localFileName by rememberSaveable { mutableStateOf("") }
@@ -97,6 +98,7 @@ fun AddParkingSpotScreen(
                                 id = id.toString(),
                                 address = address,
                                 number = number.toInt(),
+                                additionalInfo = additionalInfo,
                                 documentUrl = documentUrl
                             )
                         }
@@ -129,13 +131,22 @@ fun AddParkingSpotScreen(
                     CustomTextField(
                         value = address,
                         onValueChange = { address = it },
-                        label = "Full address"
+                        label = "Full address",
+                        maxLines = 1
                     )
                     CustomTextField(
                         value = number,
                         onValueChange = { number = it },
                         label = "Number of the parking spot",
+                        maxLines = 1,
                         keyboardType = KeyboardType.Number,
+                        modifier = Modifier.padding(top = 10.dp)
+                    )
+                    CustomTextField(
+                        value = additionalInfo,
+                        onValueChange = { additionalInfo = it },
+                        label = "Any other details you want to share with drivers so that they can find " +
+                                "and access your parking spot(e.g., entrance code, specific instructions)",
                         modifier = Modifier.padding(top = 10.dp)
                     )
                     PDFFilePicker(

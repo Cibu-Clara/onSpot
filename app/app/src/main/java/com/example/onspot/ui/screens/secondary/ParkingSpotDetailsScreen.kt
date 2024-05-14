@@ -31,7 +31,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.onspot.navigation.Screens
@@ -39,6 +41,7 @@ import com.example.onspot.ui.components.CustomAlertDialog
 import com.example.onspot.ui.components.CustomButton
 import com.example.onspot.ui.components.CustomTopBar
 import com.example.onspot.ui.components.PDFEditPicker
+import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.utils.Resource
 import com.example.onspot.utils.openPdf
 import com.example.onspot.viewmodel.ParkingSpotViewModel
@@ -55,6 +58,7 @@ fun ParkingSpotDetailsScreen(
 
     var address by rememberSaveable { mutableStateOf("") }
     var number by rememberSaveable { mutableStateOf("") }
+    var additionalInfo by rememberSaveable { mutableStateOf("") }
     var documentUrl by rememberSaveable { mutableStateOf("") }
     var originalFileName by rememberSaveable { mutableStateOf("") }
     var localFileName by rememberSaveable { mutableStateOf("") }
@@ -81,6 +85,7 @@ fun ParkingSpotDetailsScreen(
                 parkingSpotDetails.data?.let { parkingSpot ->
                     address = parkingSpot.address
                     number = parkingSpot.number.toString()
+                    additionalInfo = parkingSpot.additionalInfo
                     documentUrl = parkingSpot.documentUrl
                 }
             }
@@ -122,10 +127,35 @@ fun ParkingSpotDetailsScreen(
                     .fillMaxSize()
                     .padding(horizontal = 30.dp, vertical = 30.dp),
             ) {
-                Text(text = "Address: $address")
-                Text(text = "Number: $number")
+                Text(
+                    text = "This is your parking spot from address $address.",
+                    fontSize = 20.sp,
+                    fontFamily = RegularFont,
+                    fontStyle = FontStyle.Italic,
+                    modifier = Modifier.padding(bottom = 10.dp)
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "•", fontSize = 24.sp, modifier = Modifier.padding(end = 8.dp))
+                    Text(
+                        text = "Bay number: $number",
+                        fontFamily = RegularFont,
+                        fontSize = 15.sp,
+                    )
+                }
+                if (additionalInfo.trim().isNotBlank()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "•", fontSize = 24.sp, modifier = Modifier.padding(end = 8.dp))
+                        Text(
+                            text = "Additional info: $additionalInfo",
+                            fontFamily = RegularFont,
+                            fontSize = 15.sp,
+                        )
+                    }
+                }
                 if (documentUrl.isNotEmpty()) {
-                    Row {
+                    Row(
+                        modifier = Modifier.padding(top = 10.dp)
+                    ) {
                         AssistChip(
                             onClick = { openPdf(context, documentUrl, id) },
                             label = { Text(text = "View contract") },
@@ -144,8 +174,7 @@ fun ParkingSpotDetailsScreen(
                                     originalFileName = it.lastPathSegment ?: "unknown.pdf"
                                     parkingSpotViewModel.editPdfDocument(id, newDocumentUri, originalFileName)
                                 }
-                            },
-                            modifier = Modifier.padding(top = 10.dp)
+                            }
                         )
                     }
                 }

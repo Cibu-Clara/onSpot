@@ -99,6 +99,7 @@ fun SignInScreen(
             value = email,
             onValueChange = { email = it },
             label = "Email",
+            maxLines = 1,
             keyboardType = KeyboardType.Email,
             modifier = Modifier.padding(top = 10.dp)
         )

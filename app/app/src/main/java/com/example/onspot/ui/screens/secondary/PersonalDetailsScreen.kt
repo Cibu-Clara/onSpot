@@ -111,7 +111,8 @@ fun PersonalDetailsScreen(
                         firstName = it
                         hasChanged = true
                     },
-                    label = "First name"
+                    label = "First name",
+                    maxLines = 1
                 )
                 CustomTextField(
                     value = lastName,
@@ -120,14 +121,16 @@ fun PersonalDetailsScreen(
                         hasChanged = true
                     },
                     modifier = Modifier.padding(top = 10.dp),
-                    label = "Last name"
+                    label = "Last name",
+                    maxLines = 1
                 )
                 CustomTextField(
                     value = email,
                     onValueChange = { email = it },
                     modifier = Modifier.padding(top = 10.dp),
                     label = "Email",
-                    isEnabled = false
+                    isEnabled = false,
+                    maxLines = 1
                 )
             }
         }

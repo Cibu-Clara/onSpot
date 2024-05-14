@@ -102,18 +102,21 @@ fun SignUpScreen(
             value = firstName,
             onValueChange = { firstName = it },
             label = "First Name",
+            maxLines = 1,
             modifier = Modifier.padding(top = 10.dp)
         )
         CustomTextField(
             value = lastName,
             onValueChange = { lastName = it },
             label = "Last Name",
+            maxLines = 1,
             modifier = Modifier.padding(top = 10.dp)
         )
         CustomTextField(
             value = email,
             onValueChange = { email = it },
             label = "Email",
+            maxLines = 1,
             keyboardType = KeyboardType.Email,
             modifier = Modifier.padding(top = 10.dp)
         )

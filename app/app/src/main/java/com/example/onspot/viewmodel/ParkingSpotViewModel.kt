@@ -46,11 +46,12 @@ class ParkingSpotViewModel : ViewModel() {
         }
     }
 
-    fun addParkingSpot(id: String, address: String, number: Int, documentUrl: String) = viewModelScope.launch {
+    fun addParkingSpot(id: String, address: String, number: Int, additionalInfo: String, documentUrl: String) = viewModelScope.launch {
         val parkingSpot = ParkingSpot(
             uuid = id,
             address = address,
             number = number,
+            additionalInfo = additionalInfo,
             documentUrl = documentUrl,
             isApproved = false,
             isReserved = false,

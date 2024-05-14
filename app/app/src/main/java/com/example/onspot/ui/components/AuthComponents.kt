@@ -47,6 +47,7 @@ fun CustomTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
+    maxLines: Int = Int.MAX_VALUE,
     keyboardType: KeyboardType = KeyboardType.Text,
     isEnabled: Boolean = true
 ) {
@@ -63,7 +64,7 @@ fun CustomTextField(
         enabled = isEnabled,
         shape = RoundedCornerShape(8.dp),
         singleLine = true,
-        maxLines = 1,
+        maxLines = maxLines,
         label = { Text(text = label, color = Color.Gray) }
     )
 }
