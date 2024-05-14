@@ -100,12 +100,29 @@ class ParkingSpotRepositoryImpl : ParkingSpotRepository {
             val documentUrl = parkingSpotDocument.getString("documentUrl")
 
             if (!documentUrl.isNullOrEmpty()) {
-                val documentRef = storageReference.child("documents/${parkingSpotId}")
-                documentRef.delete().await()
+                deletePdfDocument(documentUrl).collect { result ->
+                    when (result) {
+                        is Resource.Loading -> emit(Resource.Loading())
+                        is Resource.Success -> emit(Resource.Success(null))
+                        is Resource.Error -> emit(Resource.Error(result.message ?: "Failed to delete document"))
+                    }
+                }
+            } else {
+                emit(Resource.Success(null))
             }
-            emit(Resource.Success(null))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Failed to delete parking spot"))
+        }
+    }
+
+    override fun deletePdfDocument(parkingSpotId: String): Flow<Resource<Void?>> = flow {
+        try {
+            emit(Resource.Loading())
+            val documentRef = storageReference.child("documents/$parkingSpotId")
+            documentRef.delete().await()
+            emit(Resource.Success(null))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Failed to delete document"))
         }
     }
 }

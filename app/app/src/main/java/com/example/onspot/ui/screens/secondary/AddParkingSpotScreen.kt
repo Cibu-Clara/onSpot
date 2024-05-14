@@ -1,6 +1,7 @@
 package com.example.onspot.ui.screens.secondary
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -73,13 +74,22 @@ fun AddParkingSpotScreen(
 
     val addParkingSpotState = parkingSpotViewModel.addParkingSpotState.collectAsState(initial = null)
     val uploadDocumentState = parkingSpotViewModel.uploadDocumentState.collectAsState(initial = null)
+    val deletePdfState = parkingSpotViewModel.deletePdfState.collectAsState(initial = null)
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Scaffold(
-            topBar = { CustomTopBar(title = "Add a parking spot", onBackClick = { navController.popBackStack() }) },
+            topBar = { CustomTopBar(
+                title = "Add a parking spot",
+                onBackClick = {
+                    navController.popBackStack()
+                    if (documentUrl.isNotBlank()) {
+                        parkingSpotViewModel.deletePdfDocument(id.toString())
+                    }
+                })
+            },
             bottomBar = {
                 CustomButton(
                     onClick = {
@@ -144,11 +154,7 @@ fun AddParkingSpotScreen(
                             enabled = isViewPDFButtonEnabled,
                             onClick = { openPdf(context, documentUrl, localFileName) },
                             label = {
-                                if (isViewPDFButtonEnabled) {
-                                    Text(text = originalFileName)
-                                } else {
-                                    Text(text = "No document uploaded")
-                                }
+                                Text(text = if (isViewPDFButtonEnabled) originalFileName else "No document uploaded")
                             },
                             leadingIcon = {
                                 Icon(
@@ -161,8 +167,7 @@ fun AddParkingSpotScreen(
                         IconButton(
                             enabled = isViewPDFButtonEnabled,
                             onClick = {
-                            /*TODO*/
-                                isViewPDFButtonEnabled = false
+                                parkingSpotViewModel.deletePdfDocument(id.toString())
                             }
                         ) {
                             Icon(
@@ -215,6 +220,7 @@ fun AddParkingSpotScreen(
                     Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
                     documentUrl = uploadDocumentState.value!!.documentUrl.toString()
                     localFileName = uploadDocumentState.value!!.localFileName.toString()
+                    isViewPDFButtonEnabled = true
                 }
             }
         }
@@ -223,6 +229,26 @@ fun AddParkingSpotScreen(
                 if (uploadDocumentState.value?.isError?.isNotEmpty() == true) {
                     val error = uploadDocumentState.value?.isError
                     Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+        LaunchedEffect(key1 = deletePdfState.value?.isSuccess) {
+            scope.launch {
+                if (deletePdfState.value?.isSuccess?.isNotEmpty() == true) {
+                    val success = deletePdfState.value?.isSuccess
+                    Log.i("ParkingSpotDetailsScreen", "Success: $success")
+                    isViewPDFButtonEnabled = false
+                    documentUrl = ""
+                    originalFileName = ""
+                    localFileName = ""
+                }
+            }
+        }
+        LaunchedEffect(key1 = deletePdfState.value?.isError) {
+            scope.launch {
+                if (deletePdfState.value?.isError?.isNotEmpty() == true) {
+                    val error = deletePdfState.value?.isError
+                    Log.e("ParkingSpotDetailsScreen", "Error: $error")
                 }
             }
         }

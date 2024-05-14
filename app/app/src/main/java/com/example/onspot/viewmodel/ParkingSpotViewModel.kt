@@ -8,6 +8,7 @@ import com.example.onspot.data.repository.ParkingSpotRepository
 import com.example.onspot.data.repository.ParkingSpotRepositoryImpl
 import com.example.onspot.ui.states.AddParkingSpotState
 import com.example.onspot.ui.states.DeleteParkingSpotState
+import com.example.onspot.ui.states.DeletePdfState
 import com.example.onspot.ui.states.UploadDocumentState
 import com.example.onspot.utils.Resource
 import kotlinx.coroutines.channels.Channel
@@ -31,6 +32,9 @@ class ParkingSpotViewModel : ViewModel() {
 
     private val _deleteParkingSpotState = Channel<DeleteParkingSpotState>()
     val deleteParkingSpotState = _deleteParkingSpotState.receiveAsFlow()
+
+    private val _deletePdfState = Channel<DeletePdfState>()
+    val deletePdfState = _deletePdfState.receiveAsFlow()
 
     fun fetchParkingSpotDetails(parkingSpotId: String) = viewModelScope.launch {
         parkingSpotRepository.getParkingSpotById(parkingSpotId).collect { parkingSpotDetailsResource ->
@@ -86,6 +90,16 @@ class ParkingSpotViewModel : ViewModel() {
                 is Resource.Loading -> { _deleteParkingSpotState.send(DeleteParkingSpotState(isLoading = true)) }
                 is Resource.Success -> { _deleteParkingSpotState.send(DeleteParkingSpotState(isSuccess = "Parking spot successfully deleted")) }
                 is Resource.Error -> { _deleteParkingSpotState.send(DeleteParkingSpotState(isError = result.message)) }
+            }
+        }
+    }
+
+    fun deletePdfDocument(id: String) = viewModelScope.launch {
+        parkingSpotRepository.deletePdfDocument(id).collect { result ->
+             when (result) {
+                is Resource.Loading -> { _deletePdfState.send(DeletePdfState(isLoading = true)) }
+                is Resource.Success -> { _deletePdfState.send(DeletePdfState(isSuccess = "PDF document successfully deleted"))}
+                is Resource.Error -> { _deletePdfState.send(DeletePdfState(isError = result.message))}
             }
         }
     }
