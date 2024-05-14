@@ -67,6 +67,9 @@ fun NavigationGraph(
         composable(route = Screens.AddParkingSpotScreen.route) { AddParkingSpotScreen(navController) }
 
         // Parking Spot Details Screen
-        composable(route = Screens.ParkingSpotDetailsScreen.route) { ParkingSpotDetailsScreen(navController)}
+        composable(route = Screens.ParkingSpotDetailsScreen.route) { backStackEntry ->
+            val parkingSpotId = backStackEntry.arguments?.getString("parkingSpotId") ?: ""
+            ParkingSpotDetailsScreen(navController, parkingSpotId)
+        }
     }
 }

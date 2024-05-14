@@ -11,7 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,8 +44,10 @@ import com.example.onspot.ui.components.CustomTextField
 import com.example.onspot.ui.components.CustomTopBar
 import com.example.onspot.ui.components.PDFFilePicker
 import com.example.onspot.ui.theme.RegularFont
+import com.example.onspot.utils.openPdf
 import com.example.onspot.viewmodel.ParkingSpotViewModel
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
@@ -49,8 +58,13 @@ fun AddParkingSpotScreen(
     var address by rememberSaveable { mutableStateOf("") }
     var number by rememberSaveable { mutableStateOf("") }
     var documentUrl by rememberSaveable { mutableStateOf("") }
+    var originalFileName by rememberSaveable { mutableStateOf("") }
+    var localFileName by rememberSaveable { mutableStateOf("") }
+    val id by rememberSaveable { mutableStateOf(UUID.randomUUID()) }
+
     val isAddButtonEnabled = address.isNotBlank() && number.isNotBlank() && documentUrl.isNotBlank()
     val isUploadButtonEnabled = documentUrl.isBlank()
+    var isViewPDFButtonEnabled = documentUrl.isNotBlank()
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -71,6 +85,7 @@ fun AddParkingSpotScreen(
                     onClick = {
                         scope.launch {
                             parkingSpotViewModel.addParkingSpot(
+                                id = id.toString(),
                                 address = address,
                                 number = number.toInt(),
                                 documentUrl = documentUrl
@@ -117,10 +132,54 @@ fun AddParkingSpotScreen(
                     PDFFilePicker(
                         isButtonEnabled = isUploadButtonEnabled,
                         onFilePicked = { documentUri ->
-                        documentUri?.let {
-                            parkingSpotViewModel.uploadDocument(documentUri)
+                            documentUri?.let {
+                                originalFileName = it.lastPathSegment ?: "unknown.pdf"
+                                parkingSpotViewModel.uploadDocument(id.toString(), documentUri, originalFileName)
+                            }
+                        },
+                        modifier = Modifier.padding(top = 10.dp)
+                    )
+                    Row {
+                        AssistChip(
+                            enabled = isViewPDFButtonEnabled,
+                            onClick = { openPdf(context, documentUrl, localFileName) },
+                            label = {
+                                if (isViewPDFButtonEnabled) {
+                                    Text(text = originalFileName)
+                                } else {
+                                    Text(text = "No document uploaded")
+                                }
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.PictureAsPdf,
+                                    contentDescription = "Open PDF",
+                                    tint = Color(0xFF9E1B1B)
+                                )
+                            }
+                        )
+                        IconButton(
+                            enabled = isViewPDFButtonEnabled,
+                            onClick = {
+                            /*TODO*/
+                                isViewPDFButtonEnabled = false
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete PDF"
+                            )
                         }
-                    })
+                        IconButton(
+                            enabled = isViewPDFButtonEnabled,
+                            onClick = { /*TODO*/ }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit PDF"
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -155,6 +214,7 @@ fun AddParkingSpotScreen(
                     val success = uploadDocumentState.value?.isSuccess
                     Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
                     documentUrl = uploadDocumentState.value!!.documentUrl.toString()
+                    localFileName = uploadDocumentState.value!!.localFileName.toString()
                 }
             }
         }

@@ -87,8 +87,6 @@ fun AboutYouTab(
                     }
                 }
             }
-        }
-        item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -97,8 +95,6 @@ fun AboutYouTab(
                     CircularProgressIndicator()
                 }
             }
-        }
-        item {
             LaunchedEffect(key1 = changeProfilePictureState.value?.isSuccess) {
                 scope.launch {
                     if (changeProfilePictureState.value?.isSuccess?.isNotEmpty() == true) {
@@ -107,8 +103,6 @@ fun AboutYouTab(
                     }
                 }
             }
-        }
-        item {
             LaunchedEffect(key1 = changeProfilePictureState.value?.isError) {
                 scope.launch {
                     if (changeProfilePictureState.value?.isError?.isNotEmpty() == true) {
@@ -117,8 +111,6 @@ fun AboutYouTab(
                     }
                 }
             }
-        }
-        item {
             LaunchedEffect(key1 = deleteProfilePictureState.value?.isSuccess) {
                 scope.launch {
                     if (deleteProfilePictureState.value?.isSuccess?.isNotEmpty() == true) {
@@ -127,8 +119,6 @@ fun AboutYouTab(
                     }
                 }
             }
-        }
-        item {
             LaunchedEffect(key1 = deleteProfilePictureState.value?.isError) {
                 scope.launch {
                     if (deleteProfilePictureState.value?.isError?.isNotEmpty() == true) {
@@ -165,8 +155,8 @@ fun UserInfo(
             profilePictureUrl = user.profilePictureUrl,
             showBottomSheet = showBottomSheet
         )
-        VerifiedProfile(navController = navController)
         ParkingSpots(navController = navController, parkingSpots = parkingSpots)
+        Vehicles(navController = navController)
     }
 }
 
@@ -259,41 +249,13 @@ fun UserInfoRow(
 }
 
 @Composable
-fun VerifiedProfile(
-    navController: NavController
-) {
-    val isIDValidated = false
-    val isEmailVerified = false
-    val isNumberVerified = false
-
-    Column(
-        modifier = Modifier
-            .padding(horizontal = 10.dp, vertical = 15.dp),
-        horizontalAlignment = Alignment.Start
-    ) {
-        Text(
-            text = if (isIDValidated && isEmailVerified && isNumberVerified)"You have a verified profile"
-                    else "Verify your profile",
-            fontWeight = FontWeight.Bold,
-            fontFamily = RegularFont,
-            fontSize = 20.sp,
-            modifier = Modifier.padding(bottom = 15.dp)
-        )
-        IconWithText(text = if (isIDValidated) "Validated ID" else "Validate your ID", isVerified = isIDValidated)
-        IconWithText(text = if (isEmailVerified) "email" else "Confirm your email address", isVerified = isEmailVerified)
-        IconWithText(text = if (isNumberVerified) "phone number" else "Add your phone number", isVerified = isNumberVerified)
-        HorizontalDivider()
-    }
-}
-
-@Composable
 fun ParkingSpots(
     navController: NavController,
     parkingSpots: List<ParkingSpot>
 ) {
     Column(
         modifier = Modifier
-            .padding(horizontal = 10.dp),
+            .padding(horizontal = 10.dp, vertical = 15.dp),
         horizontalAlignment = Alignment.Start
     ) {
         Text(
@@ -305,10 +267,11 @@ fun ParkingSpots(
         )
         ParkingSpotsList(navController = navController, parkingSpots = parkingSpots)
         IconWithText(
-            text = "Add a parking spot",
+            text = "Register a parking spot",
             isVerified = false,
             onAddAction = { navController.navigate(Screens.AddParkingSpotScreen.route) }
         )
+        HorizontalDivider()
     }
 }
 
@@ -322,7 +285,10 @@ fun ParkingSpotsList(
             ParkingSpotListItem(
                 address = spot.address,
                 number = spot.number,
-                onItemClick = { navController.navigate(Screens.ParkingSpotDetailsScreen.route) }
+                onItemClick = {
+                    val route = Screens.ParkingSpotDetailsScreen.createRoute(spot.uuid)
+                    navController.navigate(route)
+                }
             )
         }
     }
@@ -352,6 +318,32 @@ fun ParkingSpotListItem(address: String, number: Int, onItemClick: () -> Unit) {
             imageVector = Icons.Default.ArrowForward,
             contentDescription = "Go to details",
             modifier = Modifier.size(24.dp)
+        )
+    }
+}
+
+@Composable
+fun Vehicles(
+    navController: NavController,
+    // vehicles: List<Vehicle>
+) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 10.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text(
+            text = "Your vehicles",
+            fontWeight = FontWeight.Bold,
+            fontFamily = RegularFont,
+            fontSize = 20.sp,
+            modifier = Modifier.padding(bottom = 15.dp)
+        )
+        // VehiclesList(navController = navController, vehicles = vehicles)
+        IconWithText(
+            text = "Register a vehicle",
+            isVerified = false,
+            onAddAction = { }
         )
     }
 }

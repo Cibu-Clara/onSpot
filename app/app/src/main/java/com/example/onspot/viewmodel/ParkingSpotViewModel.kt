@@ -7,15 +7,21 @@ import com.example.onspot.data.model.ParkingSpot
 import com.example.onspot.data.repository.ParkingSpotRepository
 import com.example.onspot.data.repository.ParkingSpotRepositoryImpl
 import com.example.onspot.ui.states.AddParkingSpotState
+import com.example.onspot.ui.states.DeleteParkingSpotState
 import com.example.onspot.ui.states.UploadDocumentState
 import com.example.onspot.utils.Resource
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 class ParkingSpotViewModel : ViewModel() {
     private val parkingSpotRepository: ParkingSpotRepository = ParkingSpotRepositoryImpl()
+
+    private val _parkingSpotDetails = MutableStateFlow<Resource<ParkingSpot>>(Resource.Loading())
+    val parkingSpotDetails: StateFlow<Resource<ParkingSpot>> = _parkingSpotDetails.asStateFlow()
 
     private val _addParkingSpotState = Channel<AddParkingSpotState>()
     val addParkingSpotState = _addParkingSpotState.receiveAsFlow()
@@ -23,9 +29,18 @@ class ParkingSpotViewModel : ViewModel() {
     private val _uploadDocumentState = Channel<UploadDocumentState>()
     val uploadDocumentState = _uploadDocumentState.receiveAsFlow()
 
-    fun addParkingSpot(address: String, number: Int, documentUrl: String) = viewModelScope.launch {
+    private val _deleteParkingSpotState = Channel<DeleteParkingSpotState>()
+    val deleteParkingSpotState = _deleteParkingSpotState.receiveAsFlow()
+
+    fun fetchParkingSpotDetails(parkingSpotId: String) = viewModelScope.launch {
+        parkingSpotRepository.getParkingSpotById(parkingSpotId).collect { parkingSpotDetailsResource ->
+            _parkingSpotDetails.value = parkingSpotDetailsResource
+        }
+    }
+
+    fun addParkingSpot(id: String, address: String, number: Int, documentUrl: String) = viewModelScope.launch {
         val parkingSpot = ParkingSpot(
-            uuid = UUID.randomUUID().toString(),
+            uuid = id,
             address = address,
             number = number,
             documentUrl = documentUrl,
@@ -41,8 +56,9 @@ class ParkingSpotViewModel : ViewModel() {
             }
         }
     }
-    fun uploadDocument(documentUri: Uri) = viewModelScope.launch {
-        parkingSpotRepository.uploadDocument(documentUri).collect { result ->
+    fun uploadDocument(id: String, documentUri: Uri, originalFileName: String) = viewModelScope.launch {
+        val localFileName = "$id.pdf"
+        parkingSpotRepository.uploadDocument(id, documentUri, originalFileName).collect { result ->
             when(result) {
                 is Resource.Loading -> { _uploadDocumentState.send(UploadDocumentState(isLoading = true)) }
                 is Resource.Success -> {
@@ -51,7 +67,8 @@ class ParkingSpotViewModel : ViewModel() {
                         _uploadDocumentState.send(
                             UploadDocumentState(
                                 isSuccess = "PDF document uploaded successfully",
-                                documentUrl = documentUrl
+                                documentUrl = documentUrl,
+                                localFileName = localFileName
                             )
                         )
                     } else {
@@ -63,4 +80,13 @@ class ParkingSpotViewModel : ViewModel() {
         }
     }
 
+    fun deleteParkingSpot(id: String) = viewModelScope.launch{
+        parkingSpotRepository.deleteParkingSpot(id).collect { result ->
+            when(result) {
+                is Resource.Loading -> { _deleteParkingSpotState.send(DeleteParkingSpotState(isLoading = true)) }
+                is Resource.Success -> { _deleteParkingSpotState.send(DeleteParkingSpotState(isSuccess = "Parking spot successfully deleted")) }
+                is Resource.Error -> { _deleteParkingSpotState.send(DeleteParkingSpotState(isError = result.message)) }
+            }
+        }
+    }
 }

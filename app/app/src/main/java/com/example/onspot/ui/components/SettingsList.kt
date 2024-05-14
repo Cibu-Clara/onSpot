@@ -85,7 +85,6 @@ fun SettingsTab(
                                         }
                                     }
                                 }
-
                                 "Delete account" -> {
                                     userProfileViewModel.verifyAuthProvider { isEmailAuthenticated ->
                                         if (isEmailAuthenticated) {
@@ -95,7 +94,6 @@ fun SettingsTab(
                                         }
                                     }
                                 }
-
                                 "Log out" -> {
                                     showLogoutDialog = true
                                 }

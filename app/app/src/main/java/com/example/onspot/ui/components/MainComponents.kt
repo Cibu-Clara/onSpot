@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,7 +41,9 @@ import com.example.onspot.ui.theme.purple
 @Composable
 fun CustomTopBar(
     title: String,
-    onBackClick: (() -> Unit)? = null
+    onBackClick: (() -> Unit)? = null,
+    icon: ImageVector? = null,
+    onIconClick: (() -> Unit)? = null
 ) {
     TopAppBar (
         title = {
@@ -62,6 +65,17 @@ fun CustomTopBar(
                 }
             }
         } else { null },
+        actions = {
+            if (icon != null && onIconClick != null) {
+                IconButton(onClick = onIconClick) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                }
+            }
+        },
         backgroundColor = purple
     )
 }
@@ -175,7 +189,8 @@ fun IconWithText(
 @Composable
 fun PDFFilePicker(
     isButtonEnabled: Boolean,
-    onFilePicked: (Uri?) -> Unit
+    onFilePicked: (Uri?) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val pdfPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
@@ -183,6 +198,7 @@ fun PDFFilePicker(
 
     Button(
         enabled = isButtonEnabled,
+        modifier = modifier,
         onClick = { pdfPickerLauncher.launch("application/pdf") }
     ) {
         Text("Upload PDF document")
