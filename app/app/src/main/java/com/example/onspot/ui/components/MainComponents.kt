@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -205,3 +206,24 @@ fun PDFFilePicker(
     }
 }
 
+@Composable
+fun PDFEditPicker(
+    isButtonEnabled: Boolean,
+    onFilePicked: (Uri?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val pdfPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? -> onFilePicked(uri) }
+
+    IconButton(
+        enabled = isButtonEnabled,
+        modifier = modifier,
+        onClick = { pdfPickerLauncher.launch("application/pdf") }
+    ) {
+        Icon(
+            imageVector = Icons.Default.Edit,
+            contentDescription = "Edit PDF"
+        )
+    }
+}

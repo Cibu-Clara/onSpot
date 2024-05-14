@@ -12,4 +12,5 @@ interface ParkingSpotRepository {
     fun uploadDocument(id: String, documentUri: Uri, originalFileName: String): Flow<Resource<String>>
     fun deleteParkingSpot(parkingSpotId: String): Flow<Resource<Void?>>
     fun deletePdfDocument(parkingSpotId: String): Flow<Resource<Void?>>
+    fun editDocument(parkingSpotId: String, documentUri: Uri, originalFileName: String): Flow<Resource<String>>
 }

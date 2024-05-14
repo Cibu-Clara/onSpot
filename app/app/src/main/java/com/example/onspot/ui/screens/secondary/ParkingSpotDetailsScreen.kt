@@ -15,11 +15,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,6 +38,7 @@ import com.example.onspot.navigation.Screens
 import com.example.onspot.ui.components.CustomAlertDialog
 import com.example.onspot.ui.components.CustomButton
 import com.example.onspot.ui.components.CustomTopBar
+import com.example.onspot.ui.components.PDFEditPicker
 import com.example.onspot.utils.Resource
 import com.example.onspot.utils.openPdf
 import com.example.onspot.viewmodel.ParkingSpotViewModel
@@ -57,11 +56,15 @@ fun ParkingSpotDetailsScreen(
     var address by rememberSaveable { mutableStateOf("") }
     var number by rememberSaveable { mutableStateOf("") }
     var documentUrl by rememberSaveable { mutableStateOf("") }
+    var originalFileName by rememberSaveable { mutableStateOf("") }
+    var localFileName by rememberSaveable { mutableStateOf("") }
+
     var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val deleteParkingSpotState = parkingSpotViewModel.deleteParkingSpotState.collectAsState(initial = null)
+    val editPdfState = parkingSpotViewModel.editPdfState.collectAsState(initial = null)
 
     LaunchedEffect(key1 = id) {
         parkingSpotViewModel.fetchParkingSpotDetails(id)
@@ -134,14 +137,16 @@ fun ParkingSpotDetailsScreen(
                                 )
                             }
                         )
-                        IconButton(
-                            onClick = { /*TODO*/ }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit PDF"
-                            )
-                        }
+                        PDFEditPicker(
+                            isButtonEnabled = true,
+                            onFilePicked = { newDocumentUri ->
+                                newDocumentUri?.let {
+                                    originalFileName = it.lastPathSegment ?: "unknown.pdf"
+                                    parkingSpotViewModel.editPdfDocument(id, newDocumentUri, originalFileName)
+                                }
+                            },
+                            modifier = Modifier.padding(top = 10.dp)
+                        )
                     }
                 }
             }
@@ -157,7 +162,7 @@ fun ParkingSpotDetailsScreen(
     }
     if (showDeleteConfirmationDialog) {
         CustomAlertDialog(
-            title = "Delete parking spot confirmation",
+            title = "Delete confirmation",
             text = "Are you sure you want to delete this parking spot?",
             confirmButtonText = "Yes",
             dismissButtonText = "No",
@@ -183,6 +188,24 @@ fun ParkingSpotDetailsScreen(
         scope.launch {
             if (deleteParkingSpotState.value?.isError?.isNotEmpty() == true) {
                 val error = deleteParkingSpotState.value?.isError
+                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    LaunchedEffect(key1 = editPdfState.value?.isSuccess) {
+        scope.launch {
+            if (editPdfState.value?.isSuccess?.isNotEmpty() == true) {
+                val success = editPdfState.value?.isSuccess
+                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+                documentUrl = editPdfState.value!!.documentUrl.toString()
+                localFileName = editPdfState.value!!.localFileName.toString()
+            }
+        }
+    }
+    LaunchedEffect(key1 = editPdfState.value?.isError) {
+        scope.launch {
+            if (editPdfState.value?.isError?.isNotEmpty() == true) {
+                val error = editPdfState.value?.isError
                 Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
             }
         }
