@@ -1,6 +1,5 @@
 package com.example.onspot.ui.components
 
-//noinspection UsingMaterialAndMaterial3Libraries
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -10,11 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Tab
-//noinspection UsingMaterialAndMaterial3Libraries
-import androidx.compose.material.TabRow
-//noinspection UsingMaterialAndMaterial3Libraries
-import androidx.compose.material.TopAppBar
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.ArrowBack
@@ -24,6 +21,7 @@ import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -36,9 +34,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.ui.theme.lightPurple
 import com.example.onspot.ui.theme.purple
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomTopBar(
     title: String,
@@ -50,22 +50,20 @@ fun CustomTopBar(
         title = {
             Text(
                 text = title,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
+                fontFamily = RegularFont,
                 fontSize = 20.sp
             )
         },
-        navigationIcon = if (onBackClick != null) {
-            {
+        navigationIcon = {
+            if (onBackClick != null) {
                 IconButton(onClick = onBackClick) {
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White
+                        contentDescription = "Back"
                     )
                 }
             }
-        } else { null },
+        },
         actions = {
             if (icon != null && onIconClick != null) {
                 IconButton(onClick = onIconClick) {
@@ -76,8 +74,7 @@ fun CustomTopBar(
                     )
                 }
             }
-        },
-        backgroundColor = purple
+        }
     )
 }
 
@@ -89,7 +86,7 @@ fun CustomTabView(
 ) {
     TabRow(
         selectedTabIndex = selectedTabIndex,
-        backgroundColor = lightPurple
+        containerColor = lightPurple
     ) {
         tabs.forEachIndexed { index, title ->
             Tab(

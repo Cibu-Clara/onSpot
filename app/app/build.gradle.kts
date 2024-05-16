@@ -89,6 +89,7 @@ dependencies {
     // Image Painter
     implementation ("io.coil-kt:coil-compose:2.4.0")
 
-    // Browser
-    implementation ("androidx.browser:browser:1.8.0")
+    // Google Maps
+    implementation ("com.google.android.gms:play-services-maps:18.2.0")
+    implementation ("com.google.maps.android:maps-compose:2.5.0")
 }
