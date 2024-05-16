@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
@@ -109,81 +110,83 @@ fun AddParkingSpotScreen(
                 )
             }
         ) {
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .clickable(onClick = { clearFocus() })
             ) {
-                Text(
-                    text = "Please provide the required details to identify your parking spot, including a document to attest" +
-                            " your ownership or legal right to use the space, such as a rental agreement or purchase contract. ",
-                    modifier = Modifier
-                        .padding(30.dp),
-                    fontFamily = RegularFont,
-                    color = Color.Gray,
-                    fontSize = 16.sp
-                )
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 30.dp)
-                ) {
-                    CustomTextField(
-                        value = address,
-                        onValueChange = { address = it },
-                        label = "Full address",
-                        maxLines = 1
+                item {
+                    Text(
+                        text = "Please provide the required details to identify your parking spot, including a document to attest" +
+                                " your ownership or legal right to use the space, such as a rental agreement or purchase contract. ",
+                        modifier = Modifier
+                            .padding(30.dp),
+                        fontFamily = RegularFont,
+                        color = Color.Gray,
+                        fontSize = 16.sp
                     )
-                    CustomTextField(
-                        value = number,
-                        onValueChange = { number = it },
-                        label = "Number of the parking spot",
-                        maxLines = 1,
-                        keyboardType = KeyboardType.Number,
-                        modifier = Modifier.padding(top = 10.dp)
-                    )
-                    CustomTextField(
-                        value = additionalInfo,
-                        onValueChange = { additionalInfo = it },
-                        label = "Any other details you want to share with drivers so that they can find " +
-                                "and access your parking spot(e.g., entrance code, specific instructions)",
-                        modifier = Modifier.padding(top = 10.dp)
-                    )
-                    PDFFilePicker(
-                        isButtonEnabled = isUploadButtonEnabled,
-                        onFilePicked = { documentUri ->
-                            documentUri?.let {
-                                originalFileName = it.lastPathSegment ?: "unknown.pdf"
-                                parkingSpotViewModel.uploadDocument(id.toString(), documentUri, originalFileName)
-                            }
-                        },
-                        modifier = Modifier.padding(top = 10.dp)
-                    )
-                    Row {
-                        AssistChip(
-                            enabled = isViewPDFButtonEnabled,
-                            onClick = { openPdf(context, documentUrl, localFileName) },
-                            label = {
-                                Text(text = if (isViewPDFButtonEnabled) originalFileName else "No document uploaded")
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 30.dp)
+                    ) {
+                        CustomTextField(
+                            value = address,
+                            onValueChange = { address = it },
+                            label = "Full address",
+                            maxLines = 1
+                        )
+                        CustomTextField(
+                            value = number,
+                            onValueChange = { number = it },
+                            label = "Number of the parking spot",
+                            maxLines = 1,
+                            keyboardType = KeyboardType.Number,
+                            modifier = Modifier.padding(top = 10.dp)
+                        )
+                        CustomTextField(
+                            value = additionalInfo,
+                            onValueChange = { additionalInfo = it },
+                            label = "Any other details you want to share with drivers so that they can find " +
+                                    "and access your parking spot(e.g., entrance code, specific instructions)",
+                            modifier = Modifier.padding(top = 10.dp)
+                        )
+                        PDFFilePicker(
+                            isButtonEnabled = isUploadButtonEnabled,
+                            onFilePicked = { documentUri ->
+                                documentUri?.let {
+                                    originalFileName = it.lastPathSegment ?: "unknown.pdf"
+                                    parkingSpotViewModel.uploadDocument(id.toString(), documentUri, originalFileName)
+                                }
                             },
-                            leadingIcon = {
+                            modifier = Modifier.padding(top = 10.dp)
+                        )
+                        Row {
+                            AssistChip(
+                                enabled = isViewPDFButtonEnabled,
+                                onClick = { openPdf(context, documentUrl, localFileName) },
+                                label = {
+                                    Text(text = if (isViewPDFButtonEnabled) originalFileName else "No document uploaded")
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.PictureAsPdf,
+                                        contentDescription = "Open PDF",
+                                        tint = Color(0xFF9E1B1B)
+                                    )
+                                }
+                            )
+                            IconButton(
+                                enabled = isViewPDFButtonEnabled,
+                                onClick = {
+                                    parkingSpotViewModel.deletePdfDocument(id.toString())
+                                }
+                            ) {
                                 Icon(
-                                    imageVector = Icons.Default.PictureAsPdf,
-                                    contentDescription = "Open PDF",
-                                    tint = Color(0xFF9E1B1B)
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete PDF"
                                 )
                             }
-                        )
-                        IconButton(
-                            enabled = isViewPDFButtonEnabled,
-                            onClick = {
-                                parkingSpotViewModel.deletePdfDocument(id.toString())
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete PDF"
-                            )
                         }
                     }
                 }

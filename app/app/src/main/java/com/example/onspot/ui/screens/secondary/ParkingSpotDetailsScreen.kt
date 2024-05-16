@@ -4,11 +4,11 @@ import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Surface
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -124,60 +124,62 @@ fun ParkingSpotDetailsScreen(
                 )
             }
         ) {
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 30.dp, vertical = 30.dp),
             ) {
-                Text(
-                    text = "This is your parking spot from address $address.",
-                    fontSize = 20.sp,
-                    fontFamily = RegularFont,
-                    fontStyle = FontStyle.Italic,
-                    modifier = Modifier.padding(bottom = 10.dp)
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "•", fontSize = 24.sp, modifier = Modifier.padding(end = 8.dp))
+                item {
                     Text(
-                        text = "Bay number: $number",
+                        text = "This is your parking spot from address $address.",
+                        fontSize = 20.sp,
                         fontFamily = RegularFont,
-                        fontSize = 15.sp,
+                        fontStyle = FontStyle.Italic,
+                        modifier = Modifier.padding(bottom = 10.dp)
                     )
-                }
-                if (additionalInfo.trim().isNotBlank()) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(text = "•", fontSize = 24.sp, modifier = Modifier.padding(end = 8.dp))
                         Text(
-                            text = "Additional info: $additionalInfo",
+                            text = "Bay number: $number",
                             fontFamily = RegularFont,
                             fontSize = 15.sp,
                         )
                     }
-                }
-                if (documentUrl.isNotEmpty()) {
-                    Row(
-                        modifier = Modifier.padding(top = 10.dp)
-                    ) {
-                        AssistChip(
-                            onClick = { openPdf(context, documentUrl, id) },
-                            label = { Text(text = "View contract") },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.PictureAsPdf,
-                                    contentDescription = "Open PDF",
-                                    tint = Color(0xFF9E1B1B)
-                                )
-                            }
-                        )
-                        PDFEditPicker(
-                            isButtonEnabled = true,
-                            onFilePicked = { newDocumentUri ->
-                                newDocumentUri?.let {
-                                    originalFileName = it.lastPathSegment ?: "unknown.pdf"
-                                    parkingSpotViewModel.editPdfDocument(id, newDocumentUri, originalFileName)
+                    if (additionalInfo.trim().isNotBlank()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = "•", fontSize = 24.sp, modifier = Modifier.padding(end = 8.dp))
+                            Text(
+                                text = "Additional info: $additionalInfo",
+                                fontFamily = RegularFont,
+                                fontSize = 15.sp,
+                            )
+                        }
+                    }
+                    if (documentUrl.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier.padding(top = 10.dp)
+                        ) {
+                            AssistChip(
+                                onClick = { openPdf(context, documentUrl, id) },
+                                label = { Text(text = "View contract") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.PictureAsPdf,
+                                        contentDescription = "Open PDF",
+                                        tint = Color(0xFF9E1B1B)
+                                    )
                                 }
-                            }
-                        )
+                            )
+                            PDFEditPicker(
+                                isButtonEnabled = true,
+                                onFilePicked = { newDocumentUri ->
+                                    newDocumentUri?.let {
+                                        originalFileName = it.lastPathSegment ?: "unknown.pdf"
+                                        parkingSpotViewModel.editPdfDocument(id, newDocumentUri, originalFileName)
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }

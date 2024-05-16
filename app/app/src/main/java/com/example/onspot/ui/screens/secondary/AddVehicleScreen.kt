@@ -124,19 +124,22 @@ fun AddVehicleScreen(
                         value = country,
                         onValueChange = { country = it },
                         label = "Country",
-                        maxLines = 1
+                        maxLines = 1,
+                        modifier = Modifier.padding(top = 10.dp)
                     )
                     CustomTextField(
                         value = make,
                         onValueChange = { make = it },
                         label = "Make",
-                        maxLines = 1
+                        maxLines = 1,
+                        modifier = Modifier.padding(top = 10.dp)
                     )
                     CustomTextField(
                         value = model,
                         onValueChange = { model = it },
                         label = "Model",
-                        maxLines = 1
+                        maxLines = 1,
+                        modifier = Modifier.padding(top = 10.dp)
                     )
                     CustomTextField(
                         value = year,
@@ -150,7 +153,8 @@ fun AddVehicleScreen(
                         value = color,
                         onValueChange = { color = it },
                         label = "Color",
-                        maxLines = 1
+                        maxLines = 1,
+                        modifier = Modifier.padding(top = 10.dp)
                     )
                 }
             }
