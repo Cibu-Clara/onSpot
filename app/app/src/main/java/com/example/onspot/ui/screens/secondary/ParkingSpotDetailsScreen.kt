@@ -67,6 +67,7 @@ fun ParkingSpotDetailsScreen(
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+
     val deleteParkingSpotState = parkingSpotViewModel.deleteParkingSpotState.collectAsState(initial = null)
     val editPdfState = parkingSpotViewModel.editPdfState.collectAsState(initial = null)
 
@@ -114,6 +115,7 @@ fun ParkingSpotDetailsScreen(
                 CustomButton(
                     onClick = {
                         scope.launch {
+                            navController.navigate(Screens.UserProfileScreen.route)
                         }
                     },
                     buttonText = "OK",

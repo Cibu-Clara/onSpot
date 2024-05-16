@@ -37,6 +37,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -44,6 +45,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.onspot.R
 import com.example.onspot.data.model.ParkingSpot
 import com.example.onspot.data.model.User
+import com.example.onspot.data.model.Vehicle
 import com.example.onspot.navigation.Screens
 import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.ui.theme.lightPurple
@@ -77,8 +79,8 @@ fun AboutYouTab(
                     }
                 }
                 is Resource.Success -> {
-                    val (user, parkingSpots) = combinedState.data!!
-                    UserInfo(navController, user, parkingSpots, showBottomSheet)
+                    val (user, parkingSpots, vehicles) = combinedState.data!!
+                    UserInfo(navController, user, parkingSpots, vehicles, showBottomSheet)
                 }
                 is Resource.Error -> {
                     val errorMessage = combinedState.message
@@ -136,6 +138,7 @@ fun UserInfo(
     navController: NavController,
     user: User,
     parkingSpots: List<ParkingSpot>,
+    vehicles: List<Vehicle>,
     showBottomSheet: () -> Unit
 ) {
     val signUpDate = user.creationTimestamp.let { timestamp ->
@@ -156,7 +159,7 @@ fun UserInfo(
             showBottomSheet = showBottomSheet
         )
         ParkingSpots(navController = navController, parkingSpots = parkingSpots)
-        Vehicles(navController = navController)
+        Vehicles(navController = navController, vehicles = vehicles)
     }
 }
 
@@ -280,7 +283,7 @@ fun ParkingSpotsList(
     navController: NavController,
     parkingSpots: List<ParkingSpot>
 ) {
-    Column() {
+    Column {
         for (spot in parkingSpots){
             ParkingSpotListItem(
                 address = spot.address,
@@ -295,7 +298,11 @@ fun ParkingSpotsList(
 }
 
 @Composable
-fun ParkingSpotListItem(address: String, number: Int, onItemClick: () -> Unit) {
+fun ParkingSpotListItem(
+    address: String,
+    number: Int,
+    onItemClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -325,7 +332,7 @@ fun ParkingSpotListItem(address: String, number: Int, onItemClick: () -> Unit) {
 @Composable
 fun Vehicles(
     navController: NavController,
-    // vehicles: List<Vehicle>
+    vehicles: List<Vehicle>
 ) {
     Column(
         modifier = Modifier
@@ -339,11 +346,62 @@ fun Vehicles(
             fontSize = 20.sp,
             modifier = Modifier.padding(bottom = 15.dp)
         )
-        // VehiclesList(navController = navController, vehicles = vehicles)
+        VehiclesList(navController = navController, vehicles = vehicles)
         IconWithText(
             text = "Register a vehicle",
             isVerified = false,
-            onAddAction = { }
+            onAddAction = { navController.navigate(Screens.AddVehicleScreen.route) }
+        )
+    }
+}
+
+@Composable
+fun VehiclesList(
+    navController: NavController,
+    vehicles: List<Vehicle>
+) {
+    Column {
+        for (vehicle in vehicles){
+            VehicleListItem(
+                model = vehicle.make + " " + vehicle.model,
+                color = vehicle.color,
+                onItemClick = {
+                     val route = Screens.VehicleDetailsScreen.createRoute(vehicle.uuid)
+                     navController.navigate(route)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun VehicleListItem(
+    model: String,
+    color: String,
+    onItemClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape = RoundedCornerShape(10.dp))
+            .clickable(onClick = onItemClick)
+            .padding(bottom = 15.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = model.uppercase(Locale.ROOT),
+                fontSize = 16.sp
+            )
+            Text(
+                text = color,
+                color = Color.Gray
+            )
+        }
+        Icon(
+            imageVector = Icons.Default.ArrowForward,
+            contentDescription = "Go to details",
+            modifier = Modifier.size(24.dp)
         )
     }
 }
