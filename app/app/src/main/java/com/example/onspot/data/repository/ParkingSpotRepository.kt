@@ -15,4 +15,5 @@ interface ParkingSpotRepository {
     fun editDocument(parkingSpotId: String, documentUri: Uri, originalFileName: String): Flow<Resource<String>>
     fun addParkingSpotPicture(parkingSpotId: String, imageUri: Uri, originalFileName: String): Flow<Resource<String>>
     fun deleteParkingSpotPicture(parkingSpotId: String): Flow<Resource<Void?>>
+    fun editPicture(parkingSpotId: String, imageUri: Uri, originalFileName: String): Flow<Resource<String>>
 }

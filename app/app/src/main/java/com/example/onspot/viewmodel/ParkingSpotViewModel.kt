@@ -11,6 +11,7 @@ import com.example.onspot.ui.states.AddParkingSpotState
 import com.example.onspot.ui.states.DeleteParkingPictureState
 import com.example.onspot.ui.states.DeleteParkingSpotState
 import com.example.onspot.ui.states.DeletePdfState
+import com.example.onspot.ui.states.EditParkingPictureState
 import com.example.onspot.ui.states.EditPdfState
 import com.example.onspot.ui.states.UploadDocumentState
 import com.example.onspot.utils.Resource
@@ -38,6 +39,9 @@ class ParkingSpotViewModel : ViewModel() {
 
     private val _deleteParkingPictureState = Channel<DeleteParkingPictureState>()
     val deleteParkingPictureState = _deleteParkingPictureState.receiveAsFlow()
+
+    private val _editParkingPictureState = Channel<EditParkingPictureState>()
+    val editParkingPictureState = _editParkingPictureState.receiveAsFlow()
 
     private val _uploadDocumentState = Channel<UploadDocumentState>()
     val uploadDocumentState = _uploadDocumentState.receiveAsFlow()
@@ -117,6 +121,30 @@ class ParkingSpotViewModel : ViewModel() {
                 is Resource.Loading -> { _deleteParkingPictureState.send(DeleteParkingPictureState(isLoading = true)) }
                 is Resource.Success -> { _deleteParkingPictureState.send(DeleteParkingPictureState(isSuccess = "Image successfully deleted"))}
                 is Resource.Error -> { _deleteParkingPictureState.send(DeleteParkingPictureState(isError = result.message))}
+            }
+        }
+    }
+
+    fun editParkingSpotPicture(id: String, imageUri: Uri, originalFileName: String) = viewModelScope.launch {
+        val localFileName = "$id.jpg"
+        parkingSpotRepository.editPicture(id, imageUri, originalFileName).collect { result ->
+            when(result) {
+                is Resource.Loading -> { _editParkingPictureState.send(EditParkingPictureState(isLoading = true)) }
+                is Resource.Success -> {
+                    val photoUrl = result.data
+                    if (photoUrl != null) {
+                        _editParkingPictureState.send(
+                            EditParkingPictureState(
+                                isSuccess = "Image edited successfully",
+                                photoUrl = photoUrl,
+                                localFileName = localFileName
+                            )
+                        )
+                    } else {
+                        _editParkingPictureState.send(EditParkingPictureState(isError = "Cannot edit image"))
+                    }
+                }
+                is Resource.Error -> { _editParkingPictureState.send(EditParkingPictureState(isError = result.message)) }
             }
         }
     }

@@ -176,4 +176,31 @@ class ParkingSpotRepositoryImpl : ParkingSpotRepository {
             emit(Resource.Error(e.message ?: "Failed to delete parking spot picture"))
         }
     }
+
+    override fun editPicture(parkingSpotId: String, imageUri: Uri, originalFileName: String): Flow<Resource<String>> = flow {
+        try {
+            emit(Resource.Loading())
+
+            val imageRef = storageReference.child("parkingSpotsPictures/${parkingSpotId}")
+
+            val metadata = StorageMetadata.Builder()
+                .setCustomMetadata("originalFileName", originalFileName)
+                .build()
+
+            val uploadTaskSnapshot = imageRef.putFile(imageUri, metadata).await()
+            val newPhotoUrl = uploadTaskSnapshot
+                .storage
+                .downloadUrl
+                .await()
+
+            parkingSpotsCollection
+                .document(parkingSpotId)
+                .update("photoUrl", newPhotoUrl.toString())
+                .await()
+
+            emit(Resource.Success(newPhotoUrl.toString()))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Failed to edit document"))
+        }
+    }
 }

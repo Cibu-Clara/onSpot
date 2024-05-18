@@ -33,7 +33,6 @@ class PhotoHandler(private val context: Context) {
 
     fun openJpg(context: Context, remoteUrl: String, localFileName: String) {
         val localFile = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), localFileName)
-
         val jpgRef = FirebaseStorage.getInstance().getReferenceFromUrl(remoteUrl)
 
         jpgRef.getFile(localFile).addOnSuccessListener {
