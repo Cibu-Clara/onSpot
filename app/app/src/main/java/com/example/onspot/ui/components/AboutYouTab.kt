@@ -240,10 +240,19 @@ fun UserInfoRow(
 
         Text(
             modifier = Modifier
+                .padding(top = 10.dp)
+                .clip(shape = RoundedCornerShape(10.dp))
+                .clickable { navController.navigate(Screens.ReviewsScreen.route) },
+            text = "View all reviews",
+            fontFamily = RegularFont,
+            color = purple
+        )
+        Text(
+            modifier = Modifier
                 .padding(bottom = 15.dp, top = 10.dp)
                 .clip(shape = RoundedCornerShape(10.dp))
                 .clickable { navController.navigate(Screens.PersonalDetailsScreen.route) },
-            text = "View personal details",
+            text = "Edit personal details",
             fontFamily = RegularFont,
             color = purple
         )
@@ -287,7 +296,7 @@ fun ParkingSpotsList(
         for (spot in parkingSpots){
             ParkingSpotListItem(
                 address = spot.address,
-                number = spot.number,
+                bayNumber = spot.bayNumber,
                 onItemClick = {
                     val route = Screens.ParkingSpotDetailsScreen.createRoute(spot.uuid)
                     navController.navigate(route)
@@ -300,7 +309,7 @@ fun ParkingSpotsList(
 @Composable
 fun ParkingSpotListItem(
     address: String,
-    number: Int,
+    bayNumber: Int,
     onItemClick: () -> Unit
 ) {
     Row(
@@ -317,7 +326,7 @@ fun ParkingSpotListItem(
                 fontSize = 16.sp
             )
             Text(
-                text = "Parking spot no. $number",
+                text = "Parking spot no. $bayNumber",
                 color = Color.Gray
             )
         }

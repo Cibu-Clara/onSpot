@@ -22,7 +22,7 @@ import com.example.onspot.ui.components.ParkingMap
 fun SearchScreen(
     navController: NavController
 ) {
-    var selectedItemIndex by rememberSaveable { mutableStateOf(2) }
+    var selectedItemIndex by rememberSaveable { mutableStateOf(1) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -40,7 +40,10 @@ fun SearchScreen(
                 )
             }
         ) { innerPadding ->
-            ParkingMap(modifier = Modifier.padding(innerPadding))
+            ParkingMap(
+                modifier = Modifier.padding(innerPadding),
+                isMarkingEnabled = false
+            )
         }
     }
 }

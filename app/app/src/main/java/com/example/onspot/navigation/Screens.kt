@@ -10,7 +10,6 @@ sealed class Screens(val route: String) {
     // main screens
     object SearchScreen : Screens(route = "SearchScreen")
     object OfferScreen : Screens(route = "OfferScreen")
-    object PostsScreen : Screens(route = "PostsScreen")
     object InboxScreen : Screens(route = "InboxScreen")
     object UserProfileScreen : Screens(route = "UserProfileScreen")
 
@@ -28,4 +27,5 @@ sealed class Screens(val route: String) {
             return "VehicleDetailsScreen/$vehicleId"
         }
     }
+    object ReviewsScreen : Screens(route = "ReviewsScreen")
 }

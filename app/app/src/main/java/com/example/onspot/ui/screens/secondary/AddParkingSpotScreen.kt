@@ -1,8 +1,13 @@
 package com.example.onspot.ui.screens.secondary
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,18 +20,23 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -37,45 +47,93 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.onspot.navigation.Screens
 import com.example.onspot.ui.components.CustomButton
 import com.example.onspot.ui.components.CustomTextField
 import com.example.onspot.ui.components.CustomTopBar
+import com.example.onspot.ui.components.ImageOptionsBottomSheet
 import com.example.onspot.ui.components.PDFFilePicker
 import com.example.onspot.ui.theme.RegularFont
+import com.example.onspot.utils.PhotoHandler
 import com.example.onspot.utils.openPdf
 import com.example.onspot.viewmodel.ParkingSpotViewModel
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun AddParkingSpotScreen(
     navController: NavController,
     parkingSpotViewModel: ParkingSpotViewModel = viewModel()
 ) {
+    var country by rememberSaveable { mutableStateOf("") }
+    var city by rememberSaveable { mutableStateOf("") }
     var address by rememberSaveable { mutableStateOf("") }
-    var number by rememberSaveable { mutableStateOf("") }
+    var bayNumber by rememberSaveable { mutableStateOf("") }
     var additionalInfo by rememberSaveable { mutableStateOf("") }
+    var photoUrl by rememberSaveable { mutableStateOf("") }
+    var originalFileNameJPG by rememberSaveable { mutableStateOf("") }
+    var localFileNameJPG by rememberSaveable { mutableStateOf("") }
     var documentUrl by rememberSaveable { mutableStateOf("") }
-    var originalFileName by rememberSaveable { mutableStateOf("") }
-    var localFileName by rememberSaveable { mutableStateOf("") }
+    var originalFileNamePDF by rememberSaveable { mutableStateOf("") }
+    var localFileNamePDF by rememberSaveable { mutableStateOf("") }
     val id by rememberSaveable { mutableStateOf(UUID.randomUUID()) }
 
-    val isAddButtonEnabled = address.isNotBlank() && number.isNotBlank() && documentUrl.isNotBlank()
-    val isUploadButtonEnabled = documentUrl.isBlank()
+    val isAddButtonEnabled = country.isNotBlank() && city.isNotBlank() && address.isNotBlank()
+            && bayNumber.isNotBlank() && photoUrl.isNotBlank() && documentUrl.isNotBlank()
+    val isUploadPhotoButtonEnabled = photoUrl.isBlank()
+    var isViewPhotoButtonEnabled = photoUrl.isNotBlank()
+    val isUploadPDFButtonEnabled = documentUrl.isBlank()
     var isViewPDFButtonEnabled = documentUrl.isNotBlank()
+    var showOptionsBottomSheet by rememberSaveable { mutableStateOf(false) }
+    val optionsSheetState = rememberModalBottomSheetState()
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     fun clearFocus() { focusManager.clearFocus() }
+    val photoHandler = remember { PhotoHandler(context) }
 
     val addParkingSpotState = parkingSpotViewModel.addParkingSpotState.collectAsState(initial = null)
     val uploadDocumentState = parkingSpotViewModel.uploadDocumentState.collectAsState(initial = null)
     val deletePdfState = parkingSpotViewModel.deletePdfState.collectAsState(initial = null)
+    val addParkingPictureState = parkingSpotViewModel.addParkingPictureState.collectAsState(initial = null)
+    val deleteParkingPictureState = parkingSpotViewModel.deleteParkingPictureState.collectAsState(initial = null)
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { isSuccess ->
+        if (isSuccess) {
+            photoHandler.photoUri?.let { savedUri ->
+                originalFileNameJPG = savedUri.lastPathSegment ?: "unknown.jpg"
+                parkingSpotViewModel.addParkingSpotPicture(id.toString(), savedUri, originalFileNameJPG)
+            }
+        }
+    }
+
+    val requestCameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            photoHandler.takePhoto(takePictureLauncher)
+        } else {
+            Toast.makeText(context, "Camera permission is needed to take photos", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val openGalleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { galleryUri: Uri? ->
+            galleryUri?.let {
+                originalFileNameJPG = it.lastPathSegment ?: "unknown.jpg"
+                parkingSpotViewModel.addParkingSpotPicture(id.toString(), galleryUri, originalFileNameJPG)
+            }
+        }
+    )
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -88,6 +146,7 @@ fun AddParkingSpotScreen(
                     navController.popBackStack()
                     if (documentUrl.isNotBlank()) {
                         parkingSpotViewModel.deletePdfDocument(id.toString())
+                        parkingSpotViewModel.deleteParkingSpotPicture(id.toString())
                     }
                 })
             },
@@ -97,9 +156,12 @@ fun AddParkingSpotScreen(
                         scope.launch {
                             parkingSpotViewModel.addParkingSpot(
                                 id = id.toString(),
+                                country = country,
+                                city = city,
                                 address = address,
-                                number = number.toInt(),
+                                bayNumber = bayNumber.toInt(),
                                 additionalInfo = additionalInfo,
+                                photoUrl = photoUrl,
                                 documentUrl = documentUrl
                             )
                         }
@@ -114,13 +176,14 @@ fun AddParkingSpotScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .clickable(onClick = { clearFocus() })
+                    .padding(it)
             ) {
                 item {
                     Text(
-                        text = "Please provide the required details to identify your parking spot, including a document to attest" +
+                        text = "Please provide the required details to identify your parking spot, including a picture of it and a document to attest" +
                                 " your ownership or legal right to use the space, such as a rental agreement or purchase contract. ",
                         modifier = Modifier
-                            .padding(30.dp),
+                            .padding(horizontal = 30.dp, vertical = 20.dp),
                         fontFamily = RegularFont,
                         color = Color.Gray,
                         fontSize = 16.sp
@@ -131,14 +194,28 @@ fun AddParkingSpotScreen(
                             .padding(horizontal = 30.dp)
                     ) {
                         CustomTextField(
-                            value = address,
-                            onValueChange = { address = it },
-                            label = "Full address",
+                            value = country,
+                            onValueChange = { country = it },
+                            label = "Country/State",
                             maxLines = 1
                         )
                         CustomTextField(
-                            value = number,
-                            onValueChange = { number = it },
+                            value = city,
+                            onValueChange = { city = it },
+                            label = "City/Town",
+                            maxLines = 1,
+                            modifier = Modifier.padding(top = 10.dp)
+                        )
+                        CustomTextField(
+                            value = address,
+                            onValueChange = { address = it },
+                            label = "Address",
+                            maxLines = 1,
+                            modifier = Modifier.padding(top = 10.dp)
+                        )
+                        CustomTextField(
+                            value = bayNumber,
+                            onValueChange = { bayNumber = it },
                             label = "Number of the parking spot",
                             maxLines = 1,
                             keyboardType = KeyboardType.Number,
@@ -151,12 +228,51 @@ fun AddParkingSpotScreen(
                                     "and access your parking spot(e.g., entrance code, specific instructions)",
                             modifier = Modifier.padding(top = 10.dp)
                         )
+                        Button(
+                            enabled = isUploadPhotoButtonEnabled,
+                            modifier = Modifier.padding(top = 10.dp),
+                            onClick = {
+                                scope.launch {
+                                    optionsSheetState.show()
+                                    showOptionsBottomSheet = true
+                                }
+                            }
+                        ) {
+                            Text("Upload/Take photo")
+                        }
+                        Row {
+                            AssistChip(
+                                enabled = isViewPhotoButtonEnabled,
+                                onClick = { photoHandler.openJpg(context, photoUrl, localFileNameJPG)  },
+                                label = {
+                                    Text(text = if (isViewPhotoButtonEnabled) originalFileNameJPG else "No photo uploaded")
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Photo,
+                                        contentDescription = "Open Photo",
+                                        tint = Color(0xFF054BC5)
+                                    )
+                                }
+                            )
+                            IconButton(
+                                enabled = isViewPhotoButtonEnabled,
+                                onClick = {
+                                    parkingSpotViewModel.deleteParkingSpotPicture(id.toString())
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Photo"
+                                )
+                            }
+                        }
                         PDFFilePicker(
-                            isButtonEnabled = isUploadButtonEnabled,
+                            isButtonEnabled = isUploadPDFButtonEnabled,
                             onFilePicked = { documentUri ->
                                 documentUri?.let {
-                                    originalFileName = it.lastPathSegment ?: "unknown.pdf"
-                                    parkingSpotViewModel.uploadDocument(id.toString(), documentUri, originalFileName)
+                                    originalFileNamePDF = it.lastPathSegment ?: "unknown.pdf"
+                                    parkingSpotViewModel.uploadDocument(id.toString(), documentUri, originalFileNamePDF)
                                 }
                             },
                             modifier = Modifier.padding(top = 10.dp)
@@ -164,9 +280,9 @@ fun AddParkingSpotScreen(
                         Row {
                             AssistChip(
                                 enabled = isViewPDFButtonEnabled,
-                                onClick = { openPdf(context, documentUrl, localFileName) },
+                                onClick = { openPdf(context, documentUrl, localFileNamePDF) },
                                 label = {
-                                    Text(text = if (isViewPDFButtonEnabled) originalFileName else "No document uploaded")
+                                    Text(text = if (isViewPDFButtonEnabled) originalFileNamePDF else "No document uploaded")
                                 },
                                 leadingIcon = {
                                     Icon(
@@ -191,6 +307,37 @@ fun AddParkingSpotScreen(
                     }
                 }
             }
+        }
+        if (showOptionsBottomSheet) {
+            ImageOptionsBottomSheet(
+                pictureUrl = photoUrl,
+                sheetState = optionsSheetState,
+                onDismiss = { showOptionsBottomSheet = false },
+                onTakePhoto = {
+                    when (PackageManager.PERMISSION_GRANTED) {
+                        ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) -> {
+                            // Permission is already granted; proceed with taking a photo.
+                            photoHandler.takePhoto(takePictureLauncher)
+                        }
+                        else -> {
+                            // Permission is not granted; request it.
+                            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    }
+                    scope.launch {
+                        optionsSheetState.hide()
+                        showOptionsBottomSheet = false
+                    }
+                },
+                onChooseFromGallery = {
+                    openGalleryLauncher.launch("image/*")
+                    scope.launch {
+                        optionsSheetState.hide()
+                        showOptionsBottomSheet = false
+                    }
+                },
+                onDeletePhoto = {}
+            )
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -223,7 +370,7 @@ fun AddParkingSpotScreen(
                     val success = uploadDocumentState.value?.isSuccess
                     Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
                     documentUrl = uploadDocumentState.value!!.documentUrl.toString()
-                    localFileName = uploadDocumentState.value!!.localFileName.toString()
+                    localFileNamePDF = uploadDocumentState.value!!.localFileName.toString()
                     isViewPDFButtonEnabled = true
                 }
             }
@@ -243,8 +390,8 @@ fun AddParkingSpotScreen(
                     Log.i("ParkingSpotDetailsScreen", "Success: $success")
                     isViewPDFButtonEnabled = false
                     documentUrl = ""
-                    originalFileName = ""
-                    localFileName = ""
+                    originalFileNamePDF = ""
+                    localFileNamePDF = ""
                 }
             }
         }
@@ -252,6 +399,45 @@ fun AddParkingSpotScreen(
             scope.launch {
                 if (deletePdfState.value?.isError?.isNotEmpty() == true) {
                     val error = deletePdfState.value?.isError
+                    Log.e("ParkingSpotDetailsScreen", "Error: $error")
+                }
+            }
+        }
+        LaunchedEffect(key1 = addParkingPictureState.value?.isSuccess) {
+            scope.launch {
+                if (addParkingPictureState.value?.isSuccess?.isNotEmpty() == true) {
+                    val success = addParkingPictureState.value?.isSuccess
+                    Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+                    photoUrl = addParkingPictureState.value!!.photoUrl.toString()
+                    localFileNameJPG = addParkingPictureState.value!!.localFileName.toString()
+                    isViewPhotoButtonEnabled = true
+                }
+            }
+        }
+        LaunchedEffect(key1 = addParkingPictureState.value?.isError) {
+            scope.launch {
+                if (addParkingPictureState.value?.isError?.isNotEmpty() == true) {
+                    val error = addParkingPictureState.value?.isError
+                    Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+        LaunchedEffect(key1 = deleteParkingPictureState.value?.isSuccess) {
+            scope.launch {
+                if (deleteParkingPictureState.value?.isSuccess?.isNotEmpty() == true) {
+                    val success = deleteParkingPictureState.value?.isSuccess
+                    Log.i("ParkingSpotDetailsScreen", "Success: $success")
+                    isViewPhotoButtonEnabled = false
+                    photoUrl = ""
+                    originalFileNameJPG = ""
+                    localFileNameJPG = ""
+                }
+            }
+        }
+        LaunchedEffect(key1 = deleteParkingPictureState.value?.isError) {
+            scope.launch {
+                if (deleteParkingPictureState.value?.isError?.isNotEmpty() == true) {
+                    val error = deleteParkingPictureState.value?.isError
                     Log.e("ParkingSpotDetailsScreen", "Error: $error")
                 }
             }

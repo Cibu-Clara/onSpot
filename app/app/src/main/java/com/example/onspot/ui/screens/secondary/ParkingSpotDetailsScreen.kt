@@ -57,7 +57,7 @@ fun ParkingSpotDetailsScreen(
     val parkingSpotDetails by parkingSpotViewModel.parkingSpotDetails.collectAsState()
 
     var address by rememberSaveable { mutableStateOf("") }
-    var number by rememberSaveable { mutableStateOf("") }
+    var bayNumber by rememberSaveable { mutableStateOf("") }
     var additionalInfo by rememberSaveable { mutableStateOf("") }
     var documentUrl by rememberSaveable { mutableStateOf("") }
     var originalFileName by rememberSaveable { mutableStateOf("") }
@@ -82,10 +82,10 @@ fun ParkingSpotDetailsScreen(
             }
         }
         is Resource.Success -> {
-            if (address.isEmpty() && number.isEmpty()) {
+            if (address.isEmpty() && bayNumber.isEmpty()) {
                 parkingSpotDetails.data?.let { parkingSpot ->
                     address = parkingSpot.address
-                    number = parkingSpot.number.toString()
+                    bayNumber = parkingSpot.bayNumber.toString()
                     additionalInfo = parkingSpot.additionalInfo
                     documentUrl = parkingSpot.documentUrl
                 }
@@ -140,7 +140,7 @@ fun ParkingSpotDetailsScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(text = "•", fontSize = 24.sp, modifier = Modifier.padding(end = 8.dp))
                         Text(
-                            text = "Bay number: $number",
+                            text = "Bay number: $bayNumber",
                             fontFamily = RegularFont,
                             fontSize = 15.sp,
                         )

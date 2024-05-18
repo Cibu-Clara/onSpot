@@ -12,12 +12,12 @@ import com.example.onspot.ui.screens.auth.OpeningScreen
 import com.example.onspot.ui.screens.main.InboxScreen
 import com.example.onspot.ui.screens.main.OfferScreen
 import com.example.onspot.ui.screens.secondary.PersonalDetailsScreen
-import com.example.onspot.ui.screens.main.PostsScreen
 import com.example.onspot.ui.screens.main.UserProfileScreen
 import com.example.onspot.ui.screens.main.SearchScreen
 import com.example.onspot.ui.screens.secondary.AddParkingSpotScreen
 import com.example.onspot.ui.screens.secondary.AddVehicleScreen
 import com.example.onspot.ui.screens.secondary.ParkingSpotDetailsScreen
+import com.example.onspot.ui.screens.secondary.ReviewsScreen
 import com.example.onspot.ui.screens.secondary.VehicleDetailsScreen
 import com.google.firebase.auth.FirebaseAuth
 
@@ -50,9 +50,6 @@ fun NavigationGraph(
         // Offer Screen
         composable(route = Screens.OfferScreen.route) { OfferScreen(navController)}
 
-        // Posts Screen
-        composable(route = Screens.PostsScreen.route) { PostsScreen(navController) }
-
         // Inbox Screen
         composable(route = Screens.InboxScreen.route) { InboxScreen(navController) }
 
@@ -82,5 +79,8 @@ fun NavigationGraph(
             val vehicleId = backStackEntry.arguments?.getString("vehicleId") ?: ""
             VehicleDetailsScreen(navController, vehicleId)
         }
+
+        // Reviews Screen
+        composable(route = Screens.ReviewsScreen.route) { ReviewsScreen(navController) }
     }
 }

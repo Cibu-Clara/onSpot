@@ -10,11 +10,13 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.runtime.Composable
@@ -38,11 +40,10 @@ fun BottomNavigationBar(
     onItemSelected: (Int) -> Unit
 ) {
     val items = listOf(
-        BottomNavigationItem("Posts", Icons.Filled.Menu, Icons.Outlined.Menu, false, route = Screens.PostsScreen.route),
         BottomNavigationItem("Offer", Icons.Filled.AddCircleOutline, Icons.Outlined.AddCircleOutline, false, route = Screens.OfferScreen.route),
         BottomNavigationItem("Search", Icons.Filled.Search, Icons.Outlined.Search, false, route = Screens.SearchScreen.route),
         BottomNavigationItem("Inbox", Icons.Filled.Email, Icons.Outlined.Email, false, 16, route = Screens.InboxScreen.route),
-        BottomNavigationItem("Profile", Icons.Filled.Person, Icons.Outlined.Person, true, route = Screens.UserProfileScreen.route)
+        BottomNavigationItem("Profile", Icons.Filled.Person, Icons.Outlined.Person, true, route = Screens.UserProfileScreen.route),
     )
 
     NavigationBar {

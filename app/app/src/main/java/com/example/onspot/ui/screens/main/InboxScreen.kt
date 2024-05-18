@@ -21,8 +21,7 @@ import com.example.onspot.ui.components.CustomTopBar
 fun InboxScreen(
     navController: NavController
 ) {
-    var selectedItemIndex by rememberSaveable { mutableStateOf(3) }
-    var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
+    var selectedItemIndex by rememberSaveable { mutableStateOf(2) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -40,11 +39,6 @@ fun InboxScreen(
                 )
             }
         ) {
-            CustomTabView(
-                tabs = listOf("Messages", "Notifications"),
-                selectedTabIndex = selectedTabIndex,
-                onTabSelected = { selectedTabIndex = it }
-            )
         }
     }
 }

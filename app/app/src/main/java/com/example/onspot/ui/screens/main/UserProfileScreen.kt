@@ -3,7 +3,6 @@ package com.example.onspot.ui.screens.main
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Environment
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -24,12 +23,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import android.Manifest
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.remember
 import com.example.onspot.ui.components.AboutYouTab
 import com.example.onspot.ui.components.BottomNavigationBar
 import com.example.onspot.ui.components.CustomTabView
@@ -37,9 +36,9 @@ import com.example.onspot.ui.components.CustomTopBar
 import com.example.onspot.ui.components.DeletePhotoBottomSheet
 import com.example.onspot.ui.components.ImageOptionsBottomSheet
 import com.example.onspot.ui.components.SettingsTab
+import com.example.onspot.utils.PhotoHandler
 import com.example.onspot.viewmodel.UserProfileViewModel
 import kotlinx.coroutines.launch
-import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -48,7 +47,7 @@ fun UserProfileScreen(
     navController: NavController,
     userProfileViewModel: UserProfileViewModel = viewModel()
 ) {
-    var selectedItemIndex by rememberSaveable { mutableStateOf(4) }
+    var selectedItemIndex by rememberSaveable { mutableStateOf(3) }
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
     var showOptionsBottomSheet by rememberSaveable { mutableStateOf(false) }
     var showDeleteBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -57,48 +56,63 @@ fun UserProfileScreen(
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val uri = rememberSaveable { mutableStateOf<Uri?>(null) }
+    val photoHandler = remember { PhotoHandler(context) }
+//
+//    val takePictureLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.TakePicture()
+//    ) { isSuccess ->
+//        if (isSuccess) {
+//            uri.value?.let { savedUri ->
+//                userProfileViewModel.updateUserProfilePictureUrl(savedUri)
+//            }
+//        }
+//    }
 
     val takePictureLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
+        ActivityResultContracts.TakePicture()
     ) { isSuccess ->
         if (isSuccess) {
-            // The image was saved at the Uri provided, update the profile picture
-            uri.value?.let { savedUri ->
+            photoHandler.photoUri?.let { savedUri ->
                 userProfileViewModel.updateUserProfilePictureUrl(savedUri)
             }
         }
     }
 
-    // Function to launch the camera
-    fun takePhoto() {
-        // Get the external files directory for saving the picture
-        val photoFile = File(
-            context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
-            "profile_picture_${System.currentTimeMillis()}.jpg"
-        ).apply {
-            createNewFile()
-        }
-        val photoUri = FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.provider",
-            photoFile
-        )
-        uri.value = photoUri
-        takePictureLauncher.launch(photoUri)
-    }
+//    fun takePhoto() {
+//        val photoFile = File(
+//            context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+//            "profile_picture_${System.currentTimeMillis()}.jpg"
+//        ).apply {
+//            createNewFile()
+//        }
+//        val photoUri = FileProvider.getUriForFile(
+//            context,
+//            "${context.packageName}.provider",
+//            photoFile
+//        )
+//        uri.value = photoUri
+//        takePictureLauncher.launch(photoUri)
+//    }
 
     val requestCameraPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            // Permission was granted, you can proceed with taking a photo.
-            takePhoto()
+            photoHandler.takePhoto(takePictureLauncher)
         } else {
-            // Permission was denied. Handle the denial properly, e.g., show an explanation.
             Toast.makeText(context, "Camera permission is needed to take photos", Toast.LENGTH_SHORT).show()
         }
     }
+
+//    val requestCameraPermissionLauncher = rememberLauncherForActivityResult(
+//        ActivityResultContracts.RequestPermission()
+//    ) { isGranted: Boolean ->
+//        if (isGranted) {
+//            takePhoto()
+//        } else {
+//            Toast.makeText(context, "Camera permission is needed to take photos", Toast.LENGTH_SHORT).show()
+//        }
+//    }
 
     val openGalleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -111,7 +125,7 @@ fun UserProfileScreen(
     
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.tertiaryContainer
     ) {
         Scaffold(
             topBar = { CustomTopBar(title = "Your profile") },
@@ -148,14 +162,14 @@ fun UserProfileScreen(
 
         if (showOptionsBottomSheet) {
             ImageOptionsBottomSheet(
-                profilePictureUrl = userProfileViewModel.userDetails.value.data?.profilePictureUrl ?: "",
+                pictureUrl = userProfileViewModel.userDetails.value.data?.profilePictureUrl ?: "",
                 sheetState = optionsSheetState,
                 onDismiss = { showOptionsBottomSheet = false },
                 onTakePhoto = {
                     when (PackageManager.PERMISSION_GRANTED) {
                         ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) -> {
                             // Permission is already granted; proceed with taking a photo.
-                            takePhoto()
+                            photoHandler.takePhoto(takePictureLauncher)
                         }
                         else -> {
                             // Permission is not granted; request it.
@@ -206,5 +220,4 @@ fun UserProfileScreen(
             )
         }
     }
-
 }

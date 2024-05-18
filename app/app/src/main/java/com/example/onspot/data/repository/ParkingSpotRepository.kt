@@ -9,8 +9,10 @@ interface ParkingSpotRepository {
     fun getParkingSpotById(parkingSpotId: String): Flow<Resource<ParkingSpot>>
     fun addParkingSpot(parkingSpot: ParkingSpot): Flow<Resource<Void?>>
     fun getParkingSpots(): Flow<Resource<List<ParkingSpot>>>
-    fun uploadDocument(id: String, documentUri: Uri, originalFileName: String): Flow<Resource<String>>
     fun deleteParkingSpot(parkingSpotId: String): Flow<Resource<Void?>>
+    fun uploadDocument(id: String, documentUri: Uri, originalFileName: String): Flow<Resource<String>>
     fun deletePdfDocument(parkingSpotId: String): Flow<Resource<Void?>>
     fun editDocument(parkingSpotId: String, documentUri: Uri, originalFileName: String): Flow<Resource<String>>
+    fun addParkingSpotPicture(parkingSpotId: String, imageUri: Uri, originalFileName: String): Flow<Resource<String>>
+    fun deleteParkingSpotPicture(parkingSpotId: String): Flow<Resource<Void?>>
 }

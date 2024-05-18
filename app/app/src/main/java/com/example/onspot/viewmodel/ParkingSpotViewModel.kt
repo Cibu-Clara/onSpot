@@ -6,7 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.onspot.data.model.ParkingSpot
 import com.example.onspot.data.repository.ParkingSpotRepository
 import com.example.onspot.data.repository.ParkingSpotRepositoryImpl
+import com.example.onspot.ui.states.AddParkingPictureState
 import com.example.onspot.ui.states.AddParkingSpotState
+import com.example.onspot.ui.states.DeleteParkingPictureState
 import com.example.onspot.ui.states.DeleteParkingSpotState
 import com.example.onspot.ui.states.DeletePdfState
 import com.example.onspot.ui.states.EditPdfState
@@ -28,11 +30,17 @@ class ParkingSpotViewModel : ViewModel() {
     private val _addParkingSpotState = Channel<AddParkingSpotState>()
     val addParkingSpotState = _addParkingSpotState.receiveAsFlow()
 
-    private val _uploadDocumentState = Channel<UploadDocumentState>()
-    val uploadDocumentState = _uploadDocumentState.receiveAsFlow()
-
     private val _deleteParkingSpotState = Channel<DeleteParkingSpotState>()
     val deleteParkingSpotState = _deleteParkingSpotState.receiveAsFlow()
+
+    private val _addParkingPictureState = Channel<AddParkingPictureState>()
+    val addParkingPictureState = _addParkingPictureState.receiveAsFlow()
+
+    private val _deleteParkingPictureState = Channel<DeleteParkingPictureState>()
+    val deleteParkingPictureState = _deleteParkingPictureState.receiveAsFlow()
+
+    private val _uploadDocumentState = Channel<UploadDocumentState>()
+    val uploadDocumentState = _uploadDocumentState.receiveAsFlow()
 
     private val _deletePdfState = Channel<DeletePdfState>()
     val deletePdfState = _deletePdfState.receiveAsFlow()
@@ -46,12 +54,15 @@ class ParkingSpotViewModel : ViewModel() {
         }
     }
 
-    fun addParkingSpot(id: String, address: String, number: Int, additionalInfo: String, documentUrl: String) = viewModelScope.launch {
+    fun addParkingSpot(id: String, country: String, city: String, address: String, bayNumber: Int, additionalInfo: String, photoUrl: String, documentUrl: String) = viewModelScope.launch {
         val parkingSpot = ParkingSpot(
             uuid = id,
+            country = country,
+            city = city,
             address = address,
-            number = number,
+            bayNumber = bayNumber,
             additionalInfo = additionalInfo,
+            photoUrl = photoUrl,
             documentUrl = documentUrl,
             isApproved = false,
             isReserved = false,
@@ -65,6 +76,51 @@ class ParkingSpotViewModel : ViewModel() {
             }
         }
     }
+
+    fun deleteParkingSpot(id: String) = viewModelScope.launch{
+        parkingSpotRepository.deleteParkingSpot(id).collect { result ->
+            when(result) {
+                is Resource.Loading -> { _deleteParkingSpotState.send(DeleteParkingSpotState(isLoading = true)) }
+                is Resource.Success -> { _deleteParkingSpotState.send(DeleteParkingSpotState(isSuccess = "Parking spot successfully deleted")) }
+                is Resource.Error -> { _deleteParkingSpotState.send(DeleteParkingSpotState(isError = result.message)) }
+            }
+        }
+    }
+
+    fun addParkingSpotPicture(id: String, imageUri: Uri, originalFileName: String) = viewModelScope.launch {
+        val localFileName = "$id.jpg"
+        parkingSpotRepository.addParkingSpotPicture(id, imageUri, originalFileName).collect { result ->
+            when (result) {
+                is Resource.Loading -> { _addParkingPictureState.send(AddParkingPictureState(isLoading = true)) }
+                is Resource.Success -> {
+                    val parkingSpotPictureUrl = result.data
+                    if (parkingSpotPictureUrl != null) {
+                        _addParkingPictureState.send(
+                            AddParkingPictureState(
+                                isSuccess = "Image successfully loaded",
+                                photoUrl = parkingSpotPictureUrl,
+                                localFileName = localFileName
+                            )
+                        )
+                    } else {
+                        _addParkingPictureState.send(AddParkingPictureState(isError = "Cannot load image"))
+                    }
+                }
+                is Resource.Error -> { _addParkingPictureState.send(AddParkingPictureState(isError = result.message)) }
+            }
+        }
+    }
+
+    fun deleteParkingSpotPicture(id: String) = viewModelScope.launch {
+        parkingSpotRepository.deleteParkingSpotPicture(id).collect { result ->
+            when (result) {
+                is Resource.Loading -> { _deleteParkingPictureState.send(DeleteParkingPictureState(isLoading = true)) }
+                is Resource.Success -> { _deleteParkingPictureState.send(DeleteParkingPictureState(isSuccess = "Image successfully deleted"))}
+                is Resource.Error -> { _deleteParkingPictureState.send(DeleteParkingPictureState(isError = result.message))}
+            }
+        }
+    }
+
     fun uploadDocument(id: String, documentUri: Uri, originalFileName: String) = viewModelScope.launch {
         val localFileName = "$id.pdf"
         parkingSpotRepository.uploadDocument(id, documentUri, originalFileName).collect { result ->
@@ -85,16 +141,6 @@ class ParkingSpotViewModel : ViewModel() {
                     }
                 }
                 is Resource.Error -> { _uploadDocumentState.send(UploadDocumentState(isError = result.message)) }
-            }
-        }
-    }
-
-    fun deleteParkingSpot(id: String) = viewModelScope.launch{
-        parkingSpotRepository.deleteParkingSpot(id).collect { result ->
-            when(result) {
-                is Resource.Loading -> { _deleteParkingSpotState.send(DeleteParkingSpotState(isLoading = true)) }
-                is Resource.Success -> { _deleteParkingSpotState.send(DeleteParkingSpotState(isSuccess = "Parking spot successfully deleted")) }
-                is Resource.Error -> { _deleteParkingSpotState.send(DeleteParkingSpotState(isError = result.message)) }
             }
         }
     }

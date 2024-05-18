@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageOptionsBottomSheet(
-    profilePictureUrl: String,
+    pictureUrl: String,
     sheetState: SheetState,
     onDismiss: () -> Unit,
     onTakePhoto: () -> Unit,
@@ -59,7 +59,7 @@ fun ImageOptionsBottomSheet(
                 textAlign = TextAlign.Start,
                 onClick = onChooseFromGallery
             )
-            if (profilePictureUrl.isNotEmpty()) {
+            if (pictureUrl.isNotEmpty()) {
                 BottomSheetButton(
                     text = "Remove Photo",
                     icon = Icons.Default.Delete,

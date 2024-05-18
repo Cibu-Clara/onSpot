@@ -25,6 +25,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,7 +75,8 @@ fun CustomTopBar(
                     )
                 }
             }
-        }
+        },
+        colors = TopAppBarColors(purple, purple, Color.White, Color.White, Color.White)
     )
 }
 
@@ -90,7 +92,7 @@ fun CustomTabView(
     ) {
         tabs.forEachIndexed { index, title ->
             Tab(
-                text = { androidx.compose.material.Text(title) },
+                text = { androidx.compose.material.Text(text = title, fontFamily = RegularFont) },
                 selected = selectedTabIndex == index,
                 onClick = { onTabSelected(index) }
             )

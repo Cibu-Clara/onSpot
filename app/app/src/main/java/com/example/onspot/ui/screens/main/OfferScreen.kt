@@ -22,7 +22,7 @@ import com.example.onspot.ui.components.CustomTopBar
 fun OfferScreen(
     navController: NavController
 ) {
-    var selectedItemIndex by rememberSaveable { mutableStateOf(1) }
+    var selectedItemIndex by rememberSaveable { mutableStateOf(0) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
