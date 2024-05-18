@@ -97,13 +97,13 @@ class ParkingSpotViewModel : ViewModel() {
                     if (parkingSpotPictureUrl != null) {
                         _addParkingPictureState.send(
                             AddParkingPictureState(
-                                isSuccess = "Image successfully loaded",
+                                isSuccess = "Image successfully uploaded",
                                 photoUrl = parkingSpotPictureUrl,
                                 localFileName = localFileName
                             )
                         )
                     } else {
-                        _addParkingPictureState.send(AddParkingPictureState(isError = "Cannot load image"))
+                        _addParkingPictureState.send(AddParkingPictureState(isError = "Cannot upload image"))
                     }
                 }
                 is Resource.Error -> { _addParkingPictureState.send(AddParkingPictureState(isError = result.message)) }

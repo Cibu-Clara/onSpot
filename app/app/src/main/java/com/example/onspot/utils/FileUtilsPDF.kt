@@ -11,23 +11,17 @@ import java.io.File
 
 fun openPdf(context: Context, remoteUrl: String, localFileName: String) {
     val localFile = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), localFileName)
-    Log.i("AAAAA", localFileName)
+    val pdfRef = FirebaseStorage.getInstance().getReferenceFromUrl(remoteUrl)
 
-    if (localFile.exists()) {
-        openLocalPdf(context, localFile)
-    } else {
-        val pdfRef = FirebaseStorage.getInstance().getReferenceFromUrl(remoteUrl)
-
-        pdfRef.getFile(localFile).addOnSuccessListener {
-            openLocalPdf(context, localFile)
-        }.addOnFailureListener { exception ->
-            Toast.makeText(context, "Failed to download PDF: ${exception.message}", Toast.LENGTH_LONG).show()
-            Log.e("DownloadPDF", "Failed to download PDF", exception)
-        }
+    pdfRef.getFile(localFile).addOnSuccessListener {
+        viewPdf(context, localFile)
+    }.addOnFailureListener { exception ->
+        Toast.makeText(context, "Failed to open PDF: ${exception.message}", Toast.LENGTH_LONG).show()
+        Log.e("OpenPDF", "Failed to open PDF", exception)
     }
 }
 
-private fun openLocalPdf(context: Context, file: File) {
+private fun viewPdf(context: Context, file: File) {
     val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
     val intent = Intent(Intent.ACTION_VIEW).apply {
         setDataAndType(uri, "application/pdf")
@@ -42,3 +36,4 @@ private fun openLocalPdf(context: Context, file: File) {
         Log.e("OpenPDF", "No application available to view PDF", e)
     }
 }
+

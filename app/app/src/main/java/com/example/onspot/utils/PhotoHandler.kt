@@ -34,21 +34,17 @@ class PhotoHandler(private val context: Context) {
     fun openJpg(context: Context, remoteUrl: String, localFileName: String) {
         val localFile = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), localFileName)
 
-        if (localFile.exists()) {
-            openLocalJpg(context, localFile)
-        } else {
-            val jpgRef = FirebaseStorage.getInstance().getReferenceFromUrl(remoteUrl)
+        val jpgRef = FirebaseStorage.getInstance().getReferenceFromUrl(remoteUrl)
 
-            jpgRef.getFile(localFile).addOnSuccessListener {
-                openLocalJpg(context, localFile)
-            }.addOnFailureListener { exception ->
-                Toast.makeText(context, "Failed to download JPG: ${exception.message}", Toast.LENGTH_LONG).show()
-                Log.e("DownloadJPG", "Failed to download JPG", exception)
-            }
+        jpgRef.getFile(localFile).addOnSuccessListener {
+            viewJpg(context, localFile)
+        }.addOnFailureListener { exception ->
+            Toast.makeText(context, "Failed to open JPG: ${exception.message}", Toast.LENGTH_LONG).show()
+            Log.e("OpenJPG", "Failed to open JPG", exception)
         }
     }
 
-    private fun openLocalJpg(context: Context, file: File) {
+    private fun viewJpg(context: Context, file: File) {
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
         val intent = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, "image/*")
