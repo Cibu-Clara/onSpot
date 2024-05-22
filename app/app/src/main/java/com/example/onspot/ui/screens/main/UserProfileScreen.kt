@@ -57,16 +57,6 @@ fun UserProfileScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val photoHandler = remember { PhotoHandler(context) }
-//
-//    val takePictureLauncher = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.TakePicture()
-//    ) { isSuccess ->
-//        if (isSuccess) {
-//            uri.value?.let { savedUri ->
-//                userProfileViewModel.updateUserProfilePictureUrl(savedUri)
-//            }
-//        }
-//    }
 
     val takePictureLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicture()
@@ -78,22 +68,6 @@ fun UserProfileScreen(
         }
     }
 
-//    fun takePhoto() {
-//        val photoFile = File(
-//            context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
-//            "profile_picture_${System.currentTimeMillis()}.jpg"
-//        ).apply {
-//            createNewFile()
-//        }
-//        val photoUri = FileProvider.getUriForFile(
-//            context,
-//            "${context.packageName}.provider",
-//            photoFile
-//        )
-//        uri.value = photoUri
-//        takePictureLauncher.launch(photoUri)
-//    }
-
     val requestCameraPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -103,16 +77,6 @@ fun UserProfileScreen(
             Toast.makeText(context, "Camera permission is needed to take photos", Toast.LENGTH_SHORT).show()
         }
     }
-
-//    val requestCameraPermissionLauncher = rememberLauncherForActivityResult(
-//        ActivityResultContracts.RequestPermission()
-//    ) { isGranted: Boolean ->
-//        if (isGranted) {
-//            takePhoto()
-//        } else {
-//            Toast.makeText(context, "Camera permission is needed to take photos", Toast.LENGTH_SHORT).show()
-//        }
-//    }
 
     val openGalleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),

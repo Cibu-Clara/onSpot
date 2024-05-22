@@ -375,7 +375,7 @@ fun ParkingSpotDetailsScreen(
                 val success = editPictureState.value?.isSuccess
                 Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
                 photoUrl = editPictureState.value!!.photoUrl.toString()
-                localFileNamePDF = editPictureState.value!!.localFileName.toString()
+                localFileNameJPG = editPictureState.value!!.localFileName.toString()
             }
         }
     }

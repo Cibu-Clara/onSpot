@@ -15,7 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.onspot.ui.components.BottomNavigationBar
 import com.example.onspot.ui.components.CustomTopBar
-import com.example.onspot.ui.components.ParkingMap
+import com.example.onspot.ui.components.ParkingMapOffer
+import com.example.onspot.ui.components.ParkingMapSearch
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
@@ -40,10 +41,7 @@ fun SearchScreen(
                 )
             }
         ) { innerPadding ->
-            ParkingMap(
-                modifier = Modifier.padding(innerPadding),
-                isMarkingEnabled = false
-            )
+            ParkingMapSearch(modifier = Modifier.padding(innerPadding))
         }
     }
 }

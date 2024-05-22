@@ -171,12 +171,12 @@ fun AddParkingSpotScreen(
                     modifier = Modifier.padding(bottom = 30.dp)
                 )
             }
-        ) {
+        ) { paddingValues ->
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .clickable(onClick = { clearFocus() })
-                    .padding(it)
+                    .padding(paddingValues)
             ) {
                 item {
                     Text(
