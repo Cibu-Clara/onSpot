@@ -12,16 +12,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.onspot.ui.components.BottomNavigationBar
 import com.example.onspot.ui.components.CustomTopBar
-import com.example.onspot.ui.components.ParkingMapOffer
-import com.example.onspot.ui.components.ParkingMapSearch
+import com.example.onspot.ui.components.ParkingMap
+import com.example.onspot.viewmodel.OfferViewModel
+import com.google.android.libraries.places.api.net.PlacesClient
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun SearchScreen(
-    navController: NavController
+    navController: NavController,
+    placesClient: PlacesClient,
+    offerViewModel: OfferViewModel = viewModel()
 ) {
     var selectedItemIndex by rememberSaveable { mutableStateOf(1) }
 
@@ -41,7 +45,13 @@ fun SearchScreen(
                 )
             }
         ) { innerPadding ->
-            ParkingMapSearch(modifier = Modifier.padding(innerPadding))
+            ParkingMap(
+                offerViewModel = offerViewModel,
+                placesClient = placesClient,
+                showMarkers = true,
+                isMarkingEnabled = false,
+                modifier = Modifier.padding(innerPadding)
+            )
         }
     }
 }

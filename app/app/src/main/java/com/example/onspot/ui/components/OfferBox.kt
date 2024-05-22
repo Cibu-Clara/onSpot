@@ -43,6 +43,7 @@ fun OfferBox(
     parkingSpots: List<ParkingSpot>,
     showOfferBox: MutableState<Boolean>,
     showMap: MutableState<Boolean>,
+    parkingSpotAddress: MutableState<String>,
     offerViewModel: OfferViewModel,
     modifier: Modifier = Modifier
 ) {
@@ -74,7 +75,10 @@ fun OfferBox(
             DropDownMenuComponent(
                 label = "Select one of your parking spots",
                 options = parkingSpots,
-                onTextSelected = { parkingSpotId = it}
+                onTextSelected = {
+                    parkingSpotId = it.uuid
+                    parkingSpotAddress.value = it.address
+                }
             )
             Text(
                 modifier = Modifier.padding(top = 20.dp, start = 20.dp, end = 20.dp),
@@ -178,7 +182,7 @@ fun OfferBox(
 fun DropDownMenuComponent(
     label: String,
     options: List<ParkingSpot>,
-    onTextSelected: (String) -> Unit
+    onTextSelected: (ParkingSpot) -> Unit
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     var selectedText by rememberSaveable { mutableStateOf("No parking spot selected") }
@@ -215,7 +219,7 @@ fun DropDownMenuComponent(
                         DropdownMenuItem(
                             onClick = {
                                 selectedText = parkingSpot.address
-                                onTextSelected(parkingSpot.uuid)
+                                onTextSelected(parkingSpot)
                                 expanded = false
                             },
                             text = { Text(text = parkingSpot.address) }

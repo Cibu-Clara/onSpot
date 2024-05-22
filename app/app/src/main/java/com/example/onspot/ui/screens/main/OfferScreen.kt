@@ -1,7 +1,6 @@
 package com.example.onspot.ui.screens.main
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,20 +27,23 @@ import com.example.onspot.data.model.ParkingSpot
 import com.example.onspot.ui.components.BottomNavigationBar
 import com.example.onspot.ui.components.CustomTopBar
 import com.example.onspot.ui.components.OfferBox
-import com.example.onspot.ui.components.ParkingMapOffer
+import com.example.onspot.ui.components.ParkingMap
 import com.example.onspot.utils.Resource
 import com.example.onspot.viewmodel.OfferViewModel
+import com.google.android.libraries.places.api.net.PlacesClient
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun OfferScreen(
     navController: NavController,
+    placesClient: PlacesClient,
     offerViewModel: OfferViewModel = viewModel()
 ) {
     var selectedItemIndex by rememberSaveable { mutableStateOf(0) }
     val showOfferBox = rememberSaveable { mutableStateOf(false) }
     val showMap = rememberSaveable { mutableStateOf(false) }
     var showConfirmation by rememberSaveable { mutableStateOf(false) }
+    val parkingSpotAddress = rememberSaveable { mutableStateOf("") }
 
     val parkingSpots by offerViewModel.parkingSpots.collectAsState()
     lateinit var parkingSpotsList : List<ParkingSpot>
@@ -72,7 +74,7 @@ fun OfferScreen(
     ) {
         Scaffold(
             topBar = {
-                CustomTopBar(title = "Offer your parking spot",)
+                CustomTopBar(title = "Offer your parking spot")
             },
             bottomBar = {
                 BottomNavigationBar(
@@ -90,11 +92,18 @@ fun OfferScreen(
                         .fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    OfferBox(parkingSpotsList, showOfferBox, showMap, offerViewModel)
+                    OfferBox(parkingSpotsList, showOfferBox, showMap, parkingSpotAddress, offerViewModel)
                 }
             }
             if (showMap.value) {
-                ParkingMapOffer(offerViewModel = offerViewModel, modifier = Modifier.padding(paddingValues))
+                ParkingMap(
+                    offerViewModel = offerViewModel,
+                    placesClient = placesClient,
+                    showMarkers = false,
+                    isMarkingEnabled = true,
+                    parkingSpotAddress = parkingSpotAddress.value,
+                    modifier = Modifier.padding(paddingValues)
+                )
             }
         }
     }

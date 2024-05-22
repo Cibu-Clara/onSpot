@@ -74,7 +74,7 @@ dependencies {
     //  Compose
     implementation("androidx.compose.material:material-icons-extended:1.6.7")
     implementation ("androidx.compose.material3:material3:1.3.0-beta01")
-    implementation ("androidx.compose.runtime:runtime-livedata:1.5.4")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.6.7")
 
     //  Firebase
     implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
@@ -93,6 +93,7 @@ dependencies {
     // Google Maps
     implementation ("com.google.android.gms:play-services-maps:18.2.0")
     implementation ("com.google.maps.android:maps-compose:2.5.0")
+    implementation ("com.google.android.libraries.places:places:3.4.0")
 
     // Date & Time
     implementation ("io.github.vanpra.compose-material-dialogs:datetime:0.8.1-rc")

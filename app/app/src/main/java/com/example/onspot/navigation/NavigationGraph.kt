@@ -19,12 +19,14 @@ import com.example.onspot.ui.screens.secondary.AddVehicleScreen
 import com.example.onspot.ui.screens.secondary.ParkingSpotDetailsScreen
 import com.example.onspot.ui.screens.secondary.ReviewsScreen
 import com.example.onspot.ui.screens.secondary.VehicleDetailsScreen
+import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun NavigationGraph(
     navController: NavHostController = rememberNavController(),
-    auth: FirebaseAuth = FirebaseAuth.getInstance()
+    auth: FirebaseAuth = FirebaseAuth.getInstance(),
+    placesClient: PlacesClient
 ) {
     NavHost(
         navController = navController,
@@ -45,10 +47,10 @@ fun NavigationGraph(
         composable(route = Screens.SignUpScreen.route) { SignUpScreen(navController) }
 
         // Search Screen
-        composable(route = Screens.SearchScreen.route) { SearchScreen(navController) }
+        composable(route = Screens.SearchScreen.route) { SearchScreen(navController, placesClient) }
 
         // Offer Screen
-        composable(route = Screens.OfferScreen.route) { OfferScreen(navController)}
+        composable(route = Screens.OfferScreen.route) { OfferScreen(navController, placesClient)}
 
         // Inbox Screen
         composable(route = Screens.InboxScreen.route) { InboxScreen(navController) }
