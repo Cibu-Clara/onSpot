@@ -1,7 +1,10 @@
 package com.example.onspot.ui.components
 
+import android.content.Context
+import android.graphics.Bitmap
 import android.util.Log
 import android.widget.Toast
+import android.graphics.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,7 +27,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -37,7 +39,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import com.example.onspot.R
+import com.example.onspot.data.model.Marker
 import com.example.onspot.ui.theme.purple
 import com.example.onspot.viewmodel.OfferViewModel
 import com.google.android.gms.maps.model.CameraPosition
@@ -50,29 +55,43 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 import com.example.onspot.utils.getAddressLatLng
+import com.example.onspot.viewmodel.SearchViewModel
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 
 @Composable
 fun ParkingMapSearch(
-    offerViewModel: OfferViewModel,
+    searchViewModel: SearchViewModel,
     placesClient: PlacesClient,
+    markersList: List<Marker>,
     modifier: Modifier = Modifier
 ) {
     val defaultCoordinates = LatLng(46.7712, 23.6236)
     var mapType by remember { mutableStateOf(MapType.NORMAL) }
     val mapProperties by remember(mapType) { mutableStateOf(MapProperties(mapType = mapType)) }
     val uiSettings by remember { mutableStateOf(MapUiSettings(zoomControlsEnabled = true)) }
-
-    val markers = remember { mutableStateListOf<LatLng>() }
+    val context = LocalContext.current
+    var mapReady by remember { mutableStateOf(false) }
+    var customIcon by remember { mutableStateOf<BitmapDescriptor?>(null) }
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(defaultCoordinates, 12f)
     }
 
+    LaunchedEffect(key1 = mapReady) {
+        if (mapReady) {
+            val density = context.resources.displayMetrics.density
+            val iconWidth = (50 * density).toInt()  // 50dp
+            val iconHeight = (50 * density).toInt() // 50dp
+            customIcon = bitmapDescriptorFromImage(context, R.drawable.parking_pin, iconWidth, iconHeight)
+        }
+    }
+
     PlaceSearchBar(
         placesClient = placesClient,
-        offerViewModel = offerViewModel,
+        searchViewModel = searchViewModel,
         onSuggestionSelected = { latLng ->
             cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 17f)
         }
@@ -81,14 +100,20 @@ fun ParkingMapSearch(
         modifier = modifier.fillMaxSize(),
         properties = mapProperties,
         uiSettings = uiSettings,
-        cameraPositionState = cameraPositionState
+        cameraPositionState = cameraPositionState,
+        onMapLoaded = {
+            mapReady = true
+        }
     ) {
-        markers.forEach { latLng ->
-            Marker(
-                state = MarkerState(position = latLng),
-                title = "Parking Spot",
-                snippet = "Tap to view details"
-            )
+        if (customIcon != null) {
+            markersList.forEach { marker ->
+                Marker(
+                    state = MarkerState(position = LatLng(marker.latitude, marker.longitude)),
+                    title = "Parking Spot",
+                    snippet = "Tap to view details",
+                    icon = customIcon
+                )
+            }
         }
     }
     FloatingActionButton(
@@ -105,6 +130,20 @@ fun ParkingMapSearch(
             contentDescription = "Toggle Map Type"
         )
     }
+}
+
+fun bitmapDescriptorFromImage(context: Context, vectorResId: Int, width: Int, height: Int): BitmapDescriptor? {
+    val vectorDrawable = ContextCompat.getDrawable(context, vectorResId)?.mutate() ?: return null
+    val drawable = DrawableCompat.wrap(vectorDrawable).apply {
+        setBounds(0, 0, width, height)
+    }
+
+    // Create a bitmap to hold the drawable's content
+    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    drawable.draw(canvas)
+
+    return BitmapDescriptorFactory.fromBitmap(bitmap)
 }
 
 @Composable
@@ -139,7 +178,7 @@ fun ParkingMapOffer(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        PlaceSearchBar(
+        PlaceSearchBarOffer(
             placesClient = placesClient,
             offerViewModel = offerViewModel,
             autocompleteAddress = parkingSpotAddress,

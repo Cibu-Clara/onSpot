@@ -1,6 +1,5 @@
 package com.example.onspot.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -34,6 +33,9 @@ class OfferViewModel : ViewModel() {
     private val _parkingSpots = MutableStateFlow<Resource<List<ParkingSpot>>>(Resource.Loading())
     val parkingSpots: StateFlow<Resource<List<ParkingSpot>>> = _parkingSpots.asStateFlow()
 
+    private val _markers = MutableStateFlow<Resource<List<Marker>>>(Resource.Loading())
+    val markers: StateFlow<Resource<List<Marker>>> = _markers.asStateFlow()
+
     private val _suggestions = MutableStateFlow<List<AutocompletePrediction>>(emptyList())
     val suggestions: StateFlow<List<AutocompletePrediction>> = _suggestions.asStateFlow()
 
@@ -41,17 +43,23 @@ class OfferViewModel : ViewModel() {
     val addMarkerState = _addMarkerState.receiveAsFlow()
 
     private val _markerData = MutableLiveData<Marker>()
-    val markerData: LiveData<Marker> = _markerData
 
     private var tempMarker = Marker()
 
     init {
         fetchParkingSpots()
+        fetchMarkers()
     }
 
     private fun fetchParkingSpots() = viewModelScope.launch {
         parkingSpotRepository.getParkingSpots().collect { parkingSpotsResource ->
             _parkingSpots.value = parkingSpotsResource
+        }
+    }
+
+    private fun fetchMarkers() = viewModelScope.launch {
+        markerRepository.getAllMarkers().collect { markersResource ->
+            _markers.value = markersResource
         }
     }
 

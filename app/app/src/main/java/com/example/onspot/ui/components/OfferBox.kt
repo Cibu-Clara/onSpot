@@ -21,8 +21,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -31,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.onspot.data.model.Marker
 import com.example.onspot.data.model.ParkingSpot
 import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.ui.theme.lightPurple
@@ -61,6 +64,8 @@ fun OfferBox(
     var isEndTimeEmpty by rememberSaveable { mutableStateOf(true) }
     val isButtonEnabled = parkingSpotId.isNotEmpty() && !isStartDateEmpty &&
             !isStartTimeEmpty && !isEndDateEmpty && !isEndTimeEmpty
+    val markers = offerViewModel.markers.collectAsState().value
+    var showDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -167,10 +172,15 @@ fun OfferBox(
                 Button(
                     enabled = isButtonEnabled,
                     onClick = {
-                        offerViewModel.createMarker(UUID.randomUUID().toString(), startDate.toString(),
-                            startTime.toString(), endDate.toString(), endTime.toString(), parkingSpotId)
-                        showOfferBox.value = false
-                        showMap.value = true
+                        val existingMarker = markers.data?.any { it.parkingSpotId == parkingSpotId }
+                        if (existingMarker == true) {
+                            showDialog = true
+                        } else {
+                            offerViewModel.createMarker(UUID.randomUUID().toString(), startDate.toString(),
+                                startTime.toString(), endDate.toString(), endTime.toString(), parkingSpotId)
+                            showOfferBox.value = false
+                            showMap.value = true
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = purple,
@@ -181,6 +191,14 @@ fun OfferBox(
                 }
             }
         }
+    }
+    if (showDialog) {
+        CustomAlertDialog(
+            title = "Error",
+            text = "You have already offered this parking spot!",
+            onConfirm = { showDialog = false },
+            onDismiss = { showDialog = false }
+        )
     }
 }
 

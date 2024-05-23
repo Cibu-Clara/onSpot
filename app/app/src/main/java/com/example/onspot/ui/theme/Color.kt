@@ -4,3 +4,4 @@ import androidx.compose.ui.graphics.Color
 
 val lightPurple = Color(0xFFE5DDFF)
 val purple = Color(0xFF5A44AA)
+val green = Color(0xFF1EA523)

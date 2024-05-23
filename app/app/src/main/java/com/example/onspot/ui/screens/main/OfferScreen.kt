@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.onspot.data.model.Marker
 import com.example.onspot.data.model.ParkingSpot
 import com.example.onspot.ui.components.BottomNavigationBar
 import com.example.onspot.ui.components.ConfirmationBox
@@ -49,8 +50,6 @@ fun OfferScreen(
 
     val parkingSpots by offerViewModel.parkingSpots.collectAsState()
     lateinit var parkingSpotsList : List<ParkingSpot>
-
-    val marker = offerViewModel.markerData.observeAsState()
 
     val context = LocalContext.current
 
