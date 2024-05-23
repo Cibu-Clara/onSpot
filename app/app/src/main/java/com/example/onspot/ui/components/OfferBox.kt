@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -27,11 +28,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.onspot.data.model.ParkingSpot
 import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.ui.theme.lightPurple
+import com.example.onspot.ui.theme.purple
 import com.example.onspot.viewmodel.OfferViewModel
 import java.time.LocalDate
 import java.time.LocalTime
@@ -168,9 +171,13 @@ fun OfferBox(
                             startTime.toString(), endDate.toString(), endTime.toString(), parkingSpotId)
                         showOfferBox.value = false
                         showMap.value = true
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = purple,
+                        contentColor = Color.White
+                    )
                 ) {
-                    Text(text = "Next")
+                    Text(text = "Next", fontWeight = FontWeight.Medium)
                 }
             }
         }

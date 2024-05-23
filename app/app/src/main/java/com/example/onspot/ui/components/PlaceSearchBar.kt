@@ -41,7 +41,7 @@ import kotlinx.coroutines.tasks.await
 fun PlaceSearchBar(
     placesClient: PlacesClient,
     offerViewModel: OfferViewModel,
-    autocompleteAddress: String,
+    autocompleteAddress: String = "",
     onSuggestionSelected: (LatLng) -> Unit,
     modifier: Modifier = Modifier
 ) {

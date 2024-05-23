@@ -16,7 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.onspot.ui.components.BottomNavigationBar
 import com.example.onspot.ui.components.CustomTopBar
-import com.example.onspot.ui.components.ParkingMap
+import com.example.onspot.ui.components.ParkingMapSearch
 import com.example.onspot.viewmodel.OfferViewModel
 import com.google.android.libraries.places.api.net.PlacesClient
 
@@ -45,11 +45,9 @@ fun SearchScreen(
                 )
             }
         ) { innerPadding ->
-            ParkingMap(
+            ParkingMapSearch(
                 offerViewModel = offerViewModel,
                 placesClient = placesClient,
-                showMarkers = true,
-                isMarkingEnabled = false,
                 modifier = Modifier.padding(innerPadding)
             )
         }
