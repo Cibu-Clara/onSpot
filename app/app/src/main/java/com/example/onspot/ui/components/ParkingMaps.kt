@@ -60,6 +60,8 @@ import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
+import java.time.LocalDate
+import java.time.LocalTime
 
 @Composable
 fun ParkingMapSearch(
@@ -80,6 +82,13 @@ fun ParkingMapSearch(
         position = CameraPosition.fromLatLngZoom(defaultCoordinates, 12f)
     }
 
+    var filterDialogVisible by remember { mutableStateOf(false) }
+    var isFilterApplied by remember { mutableStateOf(false) }
+    var startDate by remember { mutableStateOf<LocalDate?>(null) }
+    var startTime by remember { mutableStateOf<LocalTime?>(null) }
+    var endDate by remember { mutableStateOf<LocalDate?>(null) }
+    var endTime by remember { mutableStateOf<LocalTime?>(null) }
+
     LaunchedEffect(key1 = mapReady) {
         if (mapReady) {
             val density = context.resources.displayMetrics.density
@@ -88,31 +97,57 @@ fun ParkingMapSearch(
             customIcon = bitmapDescriptorFromImage(context, R.drawable.parking_pin, iconWidth, iconHeight)
         }
     }
-
-    PlaceSearchBar(
-        placesClient = placesClient,
-        searchViewModel = searchViewModel,
-        onSuggestionSelected = { latLng ->
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 17f)
+    Box(modifier = modifier.fillMaxSize()) {
+        PlaceSearchBar(
+            placesClient = placesClient,
+            searchViewModel = searchViewModel,
+            onSuggestionSelected = { latLng ->
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 17f)
+            },
+            showFilterDialog = { filterDialogVisible = true }
+        )
+        GoogleMap(
+            properties = mapProperties,
+            uiSettings = uiSettings,
+            cameraPositionState = cameraPositionState,
+            onMapLoaded = {
+                mapReady = true
+            }
+        ) {
+            if (customIcon != null) {
+                markersList.filter { marker ->
+                    (startDate == null || LocalDate.parse(marker.startDate) <= startDate) &&
+                    (endDate == null || LocalDate.parse(marker.endDate) >= endDate) &&
+                    (startTime == null || LocalTime.parse(marker.startTime) <= startTime) &&
+                    (endTime == null || LocalTime.parse(marker.endTime) >= endTime)
+                }.forEach { marker ->
+                    Marker(
+                        state = MarkerState(position = LatLng(marker.latitude, marker.longitude)),
+                        title = "Parking Spot",
+                        snippet = "Tap to view details",
+                        icon = customIcon
+                    )
+                }
+            }
         }
-    )
-    GoogleMap(
-        modifier = modifier.fillMaxSize(),
-        properties = mapProperties,
-        uiSettings = uiSettings,
-        cameraPositionState = cameraPositionState,
-        onMapLoaded = {
-            mapReady = true
-        }
-    ) {
-        if (customIcon != null) {
-            markersList.forEach { marker ->
-                Marker(
-                    state = MarkerState(position = LatLng(marker.latitude, marker.longitude)),
-                    title = "Parking Spot",
-                    snippet = "Tap to view details",
-                    icon = customIcon
+        if (isFilterApplied) {
+            Button(
+                onClick = {
+                    startDate = null
+                    startTime = null
+                    endDate = null
+                    endTime = null
+                    isFilterApplied = false
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = purple,
+                    contentColor = Color.White
                 )
+            ) {
+                Text(text = "Remove filters", fontWeight = FontWeight.Medium)
             }
         }
     }
@@ -130,6 +165,19 @@ fun ParkingMapSearch(
             contentDescription = "Toggle Map Type"
         )
     }
+    if (filterDialogVisible) {
+        FilterDialog(
+            onDismiss = { filterDialogVisible = false },
+            onApplyFilter = { sDate, sTime, eDate, eTime ->
+                startDate = sDate
+                startTime = sTime
+                endDate = eDate
+                endTime = eTime
+                filterDialogVisible = false
+                isFilterApplied = true
+            }
+        )
+    }
 }
 
 fun bitmapDescriptorFromImage(context: Context, vectorResId: Int, width: Int, height: Int): BitmapDescriptor? {
@@ -138,7 +186,6 @@ fun bitmapDescriptorFromImage(context: Context, vectorResId: Int, width: Int, he
         setBounds(0, 0, width, height)
     }
 
-    // Create a bitmap to hold the drawable's content
     val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     drawable.draw(canvas)

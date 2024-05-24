@@ -5,9 +5,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -27,6 +30,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +45,9 @@ import androidx.compose.ui.unit.sp
 import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.ui.theme.lightPurple
 import com.example.onspot.ui.theme.purple
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.temporal.ChronoUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -225,4 +235,127 @@ fun PDFEditPicker(
             contentDescription = "Edit PDF"
         )
     }
+}
+
+@Composable
+fun FilterDialog(
+    onDismiss: () -> Unit,
+    onApplyFilter: (LocalDate?, LocalTime?, LocalDate?, LocalTime?) -> Unit
+) {
+    var startDate by rememberSaveable { mutableStateOf(LocalDate.now()) }
+    var isStartDateEmpty by rememberSaveable { mutableStateOf(true) }
+    var startTime by rememberSaveable { mutableStateOf(LocalTime.NOON) }
+    var isStartTimeEmpty by rememberSaveable { mutableStateOf(true) }
+    var endDate by rememberSaveable { mutableStateOf(LocalDate.now()) }
+    var isEndDateEmpty by rememberSaveable { mutableStateOf(true) }
+    var endTime by rememberSaveable { mutableStateOf(LocalTime.NOON) }
+    var isEndTimeEmpty by rememberSaveable { mutableStateOf(true) }
+
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = {
+            Text(
+                text = "Set filter",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = Color.Black
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text = "When do you need the parking spot?",
+                    fontFamily = RegularFont,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 16.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 10.dp)
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(text = "•", fontSize = 24.sp, modifier = Modifier.padding(end = 8.dp))
+                    Text(
+                        text = "From:",
+                        fontFamily = RegularFont,
+                        fontSize = 15.sp,
+                    )
+                }
+                Row {
+                    DatePicker(
+                        label = "Date",
+                        onDateSelected = {
+                            startDate = it
+                            isStartDateEmpty = false
+                        },
+                        greaterThan = LocalDate.now().minusDays(1),
+                        modifier = Modifier.weight(0.5f)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    TimePicker(
+                        label = "Time",
+                        enabled = !isStartDateEmpty,
+                        onTimeSelected = {
+                            startTime = it
+                            isStartTimeEmpty = false
+                        },
+                        greaterThan = if (startDate == LocalDate.now()) LocalTime.now().truncatedTo(
+                            ChronoUnit.MINUTES) else LocalTime.MIN,
+                        modifier = Modifier.weight(0.5f)
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "•", fontSize = 24.sp, modifier = Modifier.padding(end = 8.dp))
+                    Text(
+                        text = "To:",
+                        fontFamily = RegularFont,
+                        fontSize = 15.sp,
+                    )
+                }
+                Row {
+                    DatePicker(
+                        label = "Date",
+                        enabled = !isStartDateEmpty,
+                        onDateSelected = {
+                            endDate = it
+                            isEndDateEmpty = false
+                        },
+                        greaterThan = startDate.minusDays(1),
+                        modifier = Modifier.weight(0.5f)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    TimePicker(
+                        label = "Time",
+                        enabled = !isStartTimeEmpty && !isEndDateEmpty,
+                        onTimeSelected = {
+                            endTime = it
+                            isEndTimeEmpty = false
+                        },
+                        greaterThan = if(startDate == endDate) startTime.plusHours(1) else LocalTime.MIN,
+                        modifier = Modifier.weight(0.5f)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                onApplyFilter(startDate, startTime, endDate, endTime)
+            }) {
+                Text("Apply")
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = {
+                    onDismiss()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.LightGray,
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
 }

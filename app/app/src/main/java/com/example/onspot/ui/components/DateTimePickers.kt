@@ -1,8 +1,13 @@
 package com.example.onspot.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,7 +55,13 @@ fun DatePicker(
                         }
                     }
                 }
-            }
+            },
+        trailingIcon = {
+            Icon(
+                Icons.Default.DateRange,
+                contentDescription = "Date"
+            )
+        }
     )
 
     MaterialDialog(
@@ -64,7 +75,6 @@ fun DatePicker(
     ) {
         datepicker(
             initialDate = greaterThan.plusDays(1),
-            title = "Pick a date",
             allowedDateValidator = {
                 it > greaterThan
             }
@@ -106,7 +116,13 @@ fun TimePicker(
                         }
                     }
                 }
-            }
+            },
+        trailingIcon = {
+            Icon(
+                Icons.Default.AccessTime,
+                contentDescription = "Time"
+            )
+        }
     )
     MaterialDialog(
         dialogState = timeDialogState,
@@ -119,7 +135,6 @@ fun TimePicker(
     ) {
         timepicker(
             initialTime = LocalTime.MIDNIGHT,
-            title = "Pick a time",
             timeRange = greaterThan..LocalTime.MAX
         ) {
             pickedTime = it
