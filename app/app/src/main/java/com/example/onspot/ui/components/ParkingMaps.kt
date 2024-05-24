@@ -61,6 +61,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 
 @Composable
@@ -115,11 +116,19 @@ fun ParkingMapSearch(
             }
         ) {
             if (customIcon != null) {
+                val now = LocalDateTime.now()
                 markersList.filter { marker ->
-                    (startDate == null || LocalDate.parse(marker.startDate) <= startDate) &&
-                    (endDate == null || LocalDate.parse(marker.endDate) >= endDate) &&
-                    (startTime == null || LocalTime.parse(marker.startTime) <= startTime) &&
-                    (endTime == null || LocalTime.parse(marker.endTime) >= endTime)
+                    val markerEndDate = LocalDate.parse(marker.endDate)
+                    val markerEndTime = LocalTime.parse(marker.endTime)
+                    val markerEndDateTime = LocalDateTime.of(markerEndDate, markerEndTime)
+                    val isEndDateTimeValid = markerEndDateTime.isAfter(now)
+
+                    val isStartDateValid = startDate == null || LocalDate.parse(marker.startDate) <= startDate
+                    val isEndDateValid = endDate == null || LocalDate.parse(marker.endDate) >= endDate
+                    val isStartTimeValid = startTime == null || LocalTime.parse(marker.startTime) <= startTime
+                    val isEndTimeValid = endTime == null || LocalTime.parse(marker.endTime) >= endTime
+
+                    isEndDateTimeValid && isStartDateValid && isEndDateValid && isStartTimeValid && isEndTimeValid
                 }.forEach { marker ->
                     Marker(
                         state = MarkerState(position = LatLng(marker.latitude, marker.longitude)),

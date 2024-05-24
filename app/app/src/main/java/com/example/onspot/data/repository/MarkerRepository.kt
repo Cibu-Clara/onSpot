@@ -8,4 +8,5 @@ import kotlinx.coroutines.flow.Flow
 interface MarkerRepository {
     fun createMarker(marker: Marker): Flow<Resource<Void?>>
     fun getAllMarkers(): Flow<Resource<List<Marker>>>
+    fun deleteMarkers(expiredMarkers: List<Marker>): Flow<Resource<Void?>>
 }

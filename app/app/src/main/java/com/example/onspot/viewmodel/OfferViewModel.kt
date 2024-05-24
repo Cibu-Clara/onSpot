@@ -1,6 +1,6 @@
 package com.example.onspot.viewmodel
 
-import androidx.lifecycle.LiveData
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,6 +25,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.LocalDateTime
 
 class OfferViewModel : ViewModel() {
     private val parkingSpotRepository: ParkingSpotRepository = ParkingSpotRepositoryImpl()
@@ -49,6 +52,7 @@ class OfferViewModel : ViewModel() {
     init {
         fetchParkingSpots()
         fetchMarkers()
+        cleanupExpiredMarkers()
     }
 
     private fun fetchParkingSpots() = viewModelScope.launch {
@@ -95,6 +99,30 @@ class OfferViewModel : ViewModel() {
                 is Resource.Loading -> { _addMarkerState.send(AddMarkerState(isLoading = true)) }
                 is Resource.Success -> { _addMarkerState.send(AddMarkerState(isSuccess = "Marker successfully created")) }
                 is Resource.Error -> { _addMarkerState.send(AddMarkerState(isError = result.message)) }
+            }
+        }
+    }
+
+    private fun cleanupExpiredMarkers() = viewModelScope.launch {
+        val now = LocalDateTime.now()
+        markerRepository.getAllMarkers().collect { resource ->
+            if (resource is Resource.Success) {
+                resource.data?.let { markers ->
+                    val expiredMarkers = markers.filter {
+                        val endDate = LocalDate.parse(it.endDate)
+                        val endTime = LocalTime.parse(it.endTime)
+                        LocalDateTime.of(endDate, endTime).isBefore(now)
+                    }
+                    if (expiredMarkers.isNotEmpty()) {
+                        markerRepository.deleteMarkers(expiredMarkers).collect { deleteResource ->
+                            when (deleteResource) {
+                                is Resource.Success -> Log.d("Cleanup", "Expired markers deleted successfully")
+                                is Resource.Error -> Log.e("Cleanup", "Error deleting expired markers: ${deleteResource.message}")
+                                else -> {}
+                            }
+                        }
+                    }
+                }
             }
         }
     }
