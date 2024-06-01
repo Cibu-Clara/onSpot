@@ -1,17 +1,30 @@
 package com.example.onspot.ui.components
 
+import android.widget.Toast
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -20,12 +33,37 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import com.example.onspot.R
+import com.example.onspot.data.model.ParkingSpot
+import com.example.onspot.navigation.Screens
+import com.example.onspot.ui.theme.RegularFont
+import com.example.onspot.ui.theme.lightPurple
+import com.example.onspot.ui.theme.purple
+import com.example.onspot.utils.Resource
+import com.example.onspot.viewmodel.UserProfileViewModel
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.util.Date
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,6 +107,165 @@ fun ImageOptionsBottomSheet(
                     textAlign = TextAlign.Start,
                     iconColor = Color.Red
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ParkingSpotDetailsBottomSheet(
+    parkingSpot: ParkingSpot,
+    sheetState: SheetState,
+    onDismiss: () -> Unit,
+    userProfileViewModel: UserProfileViewModel
+) {
+    val userDetails by userProfileViewModel.userDetails.collectAsState()
+    val context = LocalContext.current
+
+    ModalBottomSheet(
+        sheetState = sheetState,
+        onDismissRequest = { onDismiss() }
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = parkingSpot.address,
+                fontFamily = RegularFont,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = purple
+            )
+            Text(
+                text = "${parkingSpot.city}, ${parkingSpot.country}",
+                fontFamily = RegularFont,
+                fontSize = 20.sp
+            )
+            when (userDetails) {
+                is Resource.Loading -> {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        CircularProgressIndicator()
+                    }
+                }
+                is Resource.Success -> {
+                    val user = userDetails.data
+                    if (user != null) {
+                        val signUpDate = user.creationTimestamp.let { timestamp ->
+                            val date = Date(timestamp)
+                            SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(date)
+                        }
+                        Row (
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier
+                                .padding(horizontal = 20.dp, vertical = 15.dp)
+                                .fillMaxWidth(),
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.Start
+                            ) {
+                                Row (
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                ){
+                                    Text(
+                                        text = "Posted by ",
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = RegularFont,
+                                        fontSize = 18.sp,
+                                    )
+                                    Text(
+                                        text = user.firstName,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = RegularFont,
+                                        fontSize = 18.sp,
+                                    )
+                                }
+                                Text(
+                                    text = "member since $signUpDate",
+                                    fontFamily = RegularFont,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(bottom = 3.dp)
+                                )
+                                Row (
+                                    modifier = Modifier.padding(bottom = 3.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "★",
+                                        fontSize = 18.sp,
+                                        fontFamily = RegularFont,
+                                        color = Color.DarkGray,
+                                        modifier = Modifier.padding(end = 5.dp)
+                                    )
+                                    Text(
+                                        text = "4.9/5",
+                                        fontFamily = RegularFont,
+                                        color = Color.DarkGray,
+                                    )
+                                }
+                                Text(
+                                    text = "View ${user.firstName}'s reviews",
+                                    fontFamily = RegularFont,
+                                    color = Color.DarkGray,
+                                    modifier = Modifier
+                                        .clip(shape = RoundedCornerShape(10.dp))
+                                        .clickable { },
+                                )
+                            }
+                            Box {
+                                if (user.profilePictureUrl.isNotEmpty()) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(user.profilePictureUrl),
+                                        contentDescription = "Profile Picture",
+                                        modifier = Modifier
+                                            .size(97.dp)
+                                            .clip(CircleShape)
+                                            .border(2.dp, Color.LightGray, CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.ic_user_picture),
+                                        contentDescription = "Default Profile Picture",
+                                        modifier = Modifier
+                                            .size(80.dp)
+                                            .background(lightPurple, CircleShape)
+                                            .clip(CircleShape)
+                                            .border(2.dp, Color.LightGray, CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                        }
+                        Text(
+                            text = "More details will be provided after ${user.firstName} accepts your reservation request.",
+                            fontFamily = RegularFont,
+                            color = Color.Gray,
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(start = 20.dp)
+                        )
+                        Button(
+                            onClick = {  },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = purple,
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier.padding(top = 10.dp)
+                        ) {
+                            Text(
+                                text = "Reserve parking spot",
+                                fontFamily = RegularFont
+                            )
+                        }
+                    }
+                }
+                is Resource.Error -> {
+                    LaunchedEffect(key1 = true) {
+                        Toast.makeText(context, "Error fetching user details", Toast.LENGTH_LONG)
+                            .show()
+                    }
+                }
             }
         }
     }

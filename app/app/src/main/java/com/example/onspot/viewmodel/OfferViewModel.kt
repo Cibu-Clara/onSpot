@@ -18,6 +18,7 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.LocalDateTime
@@ -50,9 +52,11 @@ class OfferViewModel : ViewModel() {
     private var tempMarker = Marker()
 
     init {
-        fetchParkingSpots()
-        fetchMarkers()
-        cleanupExpiredMarkers()
+        viewModelScope.launch {
+            cleanupExpiredMarkers()
+            fetchParkingSpots()
+            fetchMarkers()
+        }
     }
 
     private fun fetchParkingSpots() = viewModelScope.launch {
@@ -87,7 +91,7 @@ class OfferViewModel : ViewModel() {
     }
 
     fun createMarker(markerId: String, startDate: String, startTime: String, endDate: String, endTime: String, parkingSpotId: String) {
-        tempMarker = tempMarker.copy(uuid = markerId, startDate = startDate, startTime = startTime, endDate = endDate, endTime = endTime, parkingSpotId = parkingSpotId)
+        tempMarker = tempMarker.copy(uuid = markerId, startDate = startDate, startTime = startTime, endDate = endDate, endTime = endTime, isReserved = false, parkingSpotId = parkingSpotId, userId = "")
     }
 
     fun finalizeMarker(latitude: Double, longitude: Double) = viewModelScope.launch {
@@ -103,7 +107,7 @@ class OfferViewModel : ViewModel() {
         }
     }
 
-    private fun cleanupExpiredMarkers() = viewModelScope.launch {
+    private suspend fun cleanupExpiredMarkers() = withContext(Dispatchers.IO) {
         val now = LocalDateTime.now()
         markerRepository.getAllMarkers().collect { resource ->
             if (resource is Resource.Success) {

@@ -68,8 +68,6 @@ class ParkingSpotViewModel : ViewModel() {
             additionalInfo = additionalInfo,
             photoUrl = photoUrl,
             documentUrl = documentUrl,
-            isApproved = false,
-            isReserved = false,
             userId = ""
         )
         parkingSpotRepository.addParkingSpot(parkingSpot).collect { result ->

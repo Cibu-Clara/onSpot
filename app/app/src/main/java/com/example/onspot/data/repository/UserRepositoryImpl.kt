@@ -180,6 +180,22 @@ class UserRepositoryImpl : UserRepository {
         emit(Resource.Error(e.message ?: "Failed to fetch user details"))
     }
 
+    override fun getUserById(userId: String): Flow<Resource<User>> = flow {
+        emit(Resource.Loading())
+        val userDocument = usersCollection
+            .document(userId)
+            .get()
+            .await()
+        val user = userDocument.toObject(User::class.java)
+        if (user != null) {
+            emit(Resource.Success(user))
+        } else {
+            emit(Resource.Error("User not found"))
+        }
+    }.catch { e ->
+        emit(Resource.Error(e.message ?: "Failed to fetch user details"))
+    }
+
     override fun updateUserProfilePicture(imageUri: Uri): Flow<Resource<String>> = flow {
         emit(Resource.Loading())
         val user = firebaseAuth.currentUser ?: throw Exception("User not logged in")

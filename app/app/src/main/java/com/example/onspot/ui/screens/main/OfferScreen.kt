@@ -47,6 +47,7 @@ fun OfferScreen(
     val showMap = rememberSaveable { mutableStateOf(false) }
     val showConfirmation = rememberSaveable { mutableStateOf(false) }
     val parkingSpotAddress = rememberSaveable { mutableStateOf("") }
+    val parkingSpotCity = rememberSaveable { mutableStateOf("") }
 
     val parkingSpots by offerViewModel.parkingSpots.collectAsState()
     lateinit var parkingSpotsList : List<ParkingSpot>
@@ -93,7 +94,7 @@ fun OfferScreen(
                         .fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    OfferBox(parkingSpotsList, showOfferBox, showMap, parkingSpotAddress, offerViewModel)
+                    OfferBox(parkingSpotsList, showOfferBox, showMap, parkingSpotAddress, parkingSpotCity, offerViewModel)
                 }
             }
             if (showMap.value) {
@@ -101,6 +102,7 @@ fun OfferScreen(
                     offerViewModel = offerViewModel,
                     placesClient = placesClient,
                     parkingSpotAddress = parkingSpotAddress.value,
+                    parkingSpotCity = parkingSpotCity.value,
                     showMap = showMap,
                     showConfirmation = showConfirmation,
                     modifier = Modifier.padding(paddingValues)

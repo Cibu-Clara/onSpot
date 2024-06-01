@@ -20,6 +20,7 @@ interface UserRepository {
     fun changePassword(currentPassword: String, newPassword: String): Flow<Resource<Void?>>
     suspend fun getCurrentUserAuthProvider(): String?
     fun getCurrentUserDetails(): Flow<Resource<User>>
+    fun getUserById(userId: String): Flow<Resource<User>>
     fun updateUserProfilePicture(imageUri: Uri): Flow<Resource<String>>
     fun deleteUserProfilePicture(): Flow<Resource<Void?>>
     fun updateUserDetails(userId: String, firstName: String, lastName: String): Flow<Resource<Void?>>

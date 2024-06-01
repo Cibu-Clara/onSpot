@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.onspot.data.model.Marker
 import com.example.onspot.data.model.ParkingSpot
 import com.example.onspot.utils.Resource
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
@@ -13,12 +14,14 @@ import kotlinx.coroutines.tasks.await
 class MarkerRepositoryImpl : MarkerRepository {
     private val markersCollection: CollectionReference =
         FirebaseFirestore.getInstance().collection("markers")
+    private val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+
     override fun createMarker(marker: Marker): Flow<Resource<Void?>> = flow {
         try {
             emit(Resource.Loading())
             markersCollection
                 .document(marker.uuid)
-                .set(marker)
+                .set(marker.copy(userId = currentUserId!!))
                 .await()
             emit(Resource.Success(null))
         }

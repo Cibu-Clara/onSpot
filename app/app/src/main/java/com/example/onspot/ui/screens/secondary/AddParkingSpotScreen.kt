@@ -129,7 +129,7 @@ fun AddParkingSpotScreen(
         contract = ActivityResultContracts.GetContent(),
         onResult = { galleryUri: Uri? ->
             galleryUri?.let {
-                originalFileNameJPG = it.lastPathSegment ?: "unknown.jpg"
+                originalFileNameJPG = it.lastPathSegment?.substringAfterLast('/') ?: "unknown.jpg"
                 parkingSpotViewModel.addParkingSpotPicture(id.toString(), galleryUri, originalFileNameJPG)
             }
         }
@@ -271,7 +271,7 @@ fun AddParkingSpotScreen(
                             isButtonEnabled = isUploadPDFButtonEnabled,
                             onFilePicked = { documentUri ->
                                 documentUri?.let {
-                                    originalFileNamePDF = it.lastPathSegment ?: "unknown.pdf"
+                                    originalFileNamePDF = it.lastPathSegment?.substringAfterLast('/') ?: "unknown.pdf"
                                     parkingSpotViewModel.uploadDocument(id.toString(), documentUri, originalFileNamePDF)
                                 }
                             },

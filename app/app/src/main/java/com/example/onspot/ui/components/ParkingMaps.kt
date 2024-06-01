@@ -18,10 +18,12 @@ import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -41,9 +43,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.onspot.R
 import com.example.onspot.data.model.Marker
 import com.example.onspot.ui.theme.purple
+import com.example.onspot.utils.Resource
 import com.example.onspot.viewmodel.OfferViewModel
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -55,18 +59,25 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 import com.example.onspot.utils.getAddressLatLng
+import com.example.onspot.viewmodel.ParkingSpotViewModel
 import com.example.onspot.viewmodel.SearchViewModel
+import com.example.onspot.viewmodel.UserProfileViewModel
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParkingMapSearch(
     searchViewModel: SearchViewModel,
+    parkingSpotViewModel: ParkingSpotViewModel = viewModel(),
+    userProfileViewModel: UserProfileViewModel = viewModel(),
     placesClient: PlacesClient,
     markersList: List<Marker>,
     modifier: Modifier = Modifier
@@ -76,11 +87,12 @@ fun ParkingMapSearch(
     val mapProperties by remember(mapType) { mutableStateOf(MapProperties(mapType = mapType)) }
     val uiSettings by remember { mutableStateOf(MapUiSettings(zoomControlsEnabled = true)) }
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var mapReady by remember { mutableStateOf(false) }
     var customIcon by remember { mutableStateOf<BitmapDescriptor?>(null) }
 
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(defaultCoordinates, 12f)
+        position = CameraPosition.fromLatLngZoom(defaultCoordinates, 7f)
     }
 
     var filterDialogVisible by remember { mutableStateOf(false) }
@@ -89,6 +101,11 @@ fun ParkingMapSearch(
     var startTime by remember { mutableStateOf<LocalTime?>(null) }
     var endDate by remember { mutableStateOf<LocalDate?>(null) }
     var endTime by remember { mutableStateOf<LocalTime?>(null) }
+    val currentUserId = Firebase.auth.currentUser?.uid
+
+    var selectedMarker by remember { mutableStateOf<Marker?>(null) }
+    val parkingSpotDetails by parkingSpotViewModel.parkingSpotDetails.collectAsState()
+    val bottomSheetState = rememberModalBottomSheetState()
 
     LaunchedEffect(key1 = mapReady) {
         if (mapReady) {
@@ -98,6 +115,17 @@ fun ParkingMapSearch(
             customIcon = bitmapDescriptorFromImage(context, R.drawable.parking_pin, iconWidth, iconHeight)
         }
     }
+
+    LaunchedEffect(key1 = selectedMarker) {
+        selectedMarker?.let { marker ->
+            parkingSpotViewModel.fetchParkingSpotDetails(marker.parkingSpotId)
+            userProfileViewModel.fetchOtherUserDetails(marker.userId)
+            scope.launch {
+                bottomSheetState.show()
+            }
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         PlaceSearchBar(
             placesClient = placesClient,
@@ -128,13 +156,21 @@ fun ParkingMapSearch(
                     val isStartTimeValid = startTime == null || LocalTime.parse(marker.startTime) <= startTime
                     val isEndTimeValid = endTime == null || LocalTime.parse(marker.endTime) >= endTime
 
-                    isEndDateTimeValid && isStartDateValid && isEndDateValid && isStartTimeValid && isEndTimeValid
+                    val isNotReserved = ! marker.isReserved
+                    val isNotCurrentUser = marker.userId != currentUserId
+
+                    isEndDateTimeValid && isStartDateValid && isEndDateValid && isStartTimeValid
+                            && isEndTimeValid && isNotReserved && isNotCurrentUser
                 }.forEach { marker ->
                     Marker(
                         state = MarkerState(position = LatLng(marker.latitude, marker.longitude)),
                         title = "Parking Spot",
                         snippet = "Tap to view details",
-                        icon = customIcon
+                        icon = customIcon,
+                        onClick = {
+                            selectedMarker = marker
+                            true
+                        }
                     )
                 }
             }
@@ -187,6 +223,36 @@ fun ParkingMapSearch(
             }
         )
     }
+    if (selectedMarker != null) {
+        when (parkingSpotDetails) {
+            is Resource.Loading -> {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    CircularProgressIndicator()
+                }
+            }
+            is Resource.Success -> {
+                val parkingSpot = parkingSpotDetails.data
+                if (parkingSpot != null) {
+                    ParkingSpotDetailsBottomSheet(
+                        parkingSpot = parkingSpot,
+                        sheetState = bottomSheetState,
+                        onDismiss = {
+                            selectedMarker = null
+                            scope.launch {
+                                bottomSheetState.hide()
+                            }
+                        },
+                        userProfileViewModel = userProfileViewModel
+                    )
+                }
+            }
+            is Resource.Error -> {
+                LaunchedEffect(key1 = true) {
+                    Toast.makeText(context, "Error fetching parking spot details", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
 }
 
 fun bitmapDescriptorFromImage(context: Context, vectorResId: Int, width: Int, height: Int): BitmapDescriptor? {
@@ -207,6 +273,7 @@ fun ParkingMapOffer(
     offerViewModel: OfferViewModel,
     placesClient: PlacesClient,
     parkingSpotAddress: String,
+    parkingSpotCity: String,
     showMap: MutableState<Boolean>,
     showConfirmation: MutableState<Boolean>,
     modifier: Modifier = Modifier
@@ -226,9 +293,10 @@ fun ParkingMapOffer(
         position = CameraPosition.fromLatLngZoom(defaultCoordinates, 12f)
     }
     var markerPosition by remember { mutableStateOf(cameraPositionState.position.target) }
+    val address = "$parkingSpotAddress, $parkingSpotCity"
 
-    LaunchedEffect(key1 = parkingSpotAddress) {
-        val location = getAddressLatLng(context, parkingSpotAddress)
+    LaunchedEffect(key1 = address) {
+        val location = getAddressLatLng(context, address)
         val zoom = if (location != defaultCoordinates) 17f else 0f
         cameraPositionState.position = CameraPosition.fromLatLngZoom(location, zoom)
     }
@@ -237,7 +305,7 @@ fun ParkingMapOffer(
         PlaceSearchBarOffer(
             placesClient = placesClient,
             offerViewModel = offerViewModel,
-            autocompleteAddress = parkingSpotAddress,
+            autocompleteAddress = address,
             onSuggestionSelected = { latLng ->
                 cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 17f)
             }

@@ -44,7 +44,7 @@ fun PersonalDetailsScreen(
     navController: NavController,
     userProfileViewModel: UserProfileViewModel = viewModel()
 ) {
-    val userDetails by userProfileViewModel.userDetails.collectAsState()
+    val userDetails by userProfileViewModel.currentUserDetails.collectAsState()
     val updateUserDetailsState = userProfileViewModel.updateUserDetailsState.collectAsState(initial = null)
 
     var firstName by rememberSaveable { mutableStateOf("") }

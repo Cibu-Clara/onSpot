@@ -50,6 +50,7 @@ fun OfferBox(
     showOfferBox: MutableState<Boolean>,
     showMap: MutableState<Boolean>,
     parkingSpotAddress: MutableState<String>,
+    parkingSpotCity: MutableState<String>,
     offerViewModel: OfferViewModel,
     modifier: Modifier = Modifier
 ) {
@@ -86,6 +87,7 @@ fun OfferBox(
                 onTextSelected = {
                     parkingSpotId = it.uuid
                     parkingSpotAddress.value = it.address
+                    parkingSpotCity.value = it.city
                 }
             )
             Text(

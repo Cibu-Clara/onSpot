@@ -34,6 +34,9 @@ class UserProfileViewModel : ViewModel() {
     private val parkingSpotRepository: ParkingSpotRepository = ParkingSpotRepositoryImpl()
     private val vehicleRepository: VehicleRepository = VehicleRepositoryImpl()
 
+    private val _currentUserDetails = MutableStateFlow<Resource<User>>(Resource.Loading())
+    val currentUserDetails: StateFlow<Resource<User>> = _currentUserDetails.asStateFlow()
+
     private val _userDetails = MutableStateFlow<Resource<User>>(Resource.Loading())
     val userDetails: StateFlow<Resource<User>> = _userDetails.asStateFlow()
 
@@ -59,7 +62,7 @@ class UserProfileViewModel : ViewModel() {
     val updateUserDetailsState = _updateUserDetailsState.receiveAsFlow()
 
     val combinedLoadState: StateFlow<Resource<Triple<User, List<ParkingSpot>, List<Vehicle>>>> =
-        combine(_userDetails, _parkingSpots, _vehicles) { userDetails, parkingSpots, vehicles ->
+        combine(_currentUserDetails, _parkingSpots, _vehicles) { userDetails, parkingSpots, vehicles ->
             when {
                 userDetails is Resource.Loading || parkingSpots is Resource.Loading || vehicles is Resource.Loading -> Resource.Loading()
                 userDetails is Resource.Error -> Resource.Error(userDetails.message ?: "Error fetching user details")
@@ -84,6 +87,12 @@ class UserProfileViewModel : ViewModel() {
 
     private fun fetchCurrentUserDetails() = viewModelScope.launch {
         userRepository.getCurrentUserDetails().collect { userDetailsResource ->
+            _currentUserDetails.value = userDetailsResource
+        }
+    }
+
+    fun fetchOtherUserDetails(userId: String) = viewModelScope.launch {
+        userRepository.getUserById(userId).collect { userDetailsResource ->
             _userDetails.value = userDetailsResource
         }
     }
@@ -154,11 +163,11 @@ class UserProfileViewModel : ViewModel() {
             when (result) {
                 is Resource.Loading -> { _changeProfilePictureState.send(ProfilePictureState(isLoading = true)) }
                 is Resource.Success -> {
-                    val currentData = _userDetails.value.data
+                    val currentData = _currentUserDetails.value.data
                     val profilePictureUrl = result.data
                     if (currentData != null && profilePictureUrl != null) {
                         val updatedUser = currentData.copy(profilePictureUrl = result.data)
-                        _userDetails.value = Resource.Success(updatedUser)
+                        _currentUserDetails.value = Resource.Success(updatedUser)
                         _changeProfilePictureState.send(ProfilePictureState(isSuccess = "Profile picture successfully updated"))
                     } else {
                         _changeProfilePictureState.send(ProfilePictureState(isError = "Cannot update profile picture"))
@@ -174,10 +183,10 @@ class UserProfileViewModel : ViewModel() {
             when (result) {
                 is Resource.Loading -> { _deleteProfilePictureState.send(ProfilePictureState(isLoading = true)) }
                 is Resource.Success -> {
-                    val currentData = _userDetails.value.data
+                    val currentData = _currentUserDetails.value.data
                     if (currentData != null) {
                         val updatedUser = currentData.copy(profilePictureUrl = "")
-                        _userDetails.value = Resource.Success(updatedUser)
+                        _currentUserDetails.value = Resource.Success(updatedUser)
                         _deleteProfilePictureState.send(ProfilePictureState(isSuccess = "Profile picture successfully deleted"))
                     } else {
                         _deleteProfilePictureState.send(ProfilePictureState(isError = "Cannot delete profile picture"))
@@ -189,14 +198,14 @@ class UserProfileViewModel : ViewModel() {
     }
 
     fun updateUserDetails(firstName: String, lastName: String) = viewModelScope.launch {
-        val currentUser = userDetails.value.data
+        val currentUser = currentUserDetails.value.data
         if (currentUser != null) {
             userRepository.updateUserDetails(currentUser.uuid, firstName, lastName).collect { result ->
                 when (result) {
                     is Resource.Loading -> { _updateUserDetailsState.send(UpdateUserDetailsState(isLoading = true)) }
                     is Resource.Success -> {
                         val updatedUser = currentUser.copy(firstName = firstName, lastName = lastName)
-                        _userDetails.value = Resource.Success(updatedUser)
+                        _currentUserDetails.value = Resource.Success(updatedUser)
                         _updateUserDetailsState.send(UpdateUserDetailsState(isSuccess = "User details successfully updated"))
                     }
                     is Resource.Error -> { _updateUserDetailsState.send(UpdateUserDetailsState(isError = result.message)) }

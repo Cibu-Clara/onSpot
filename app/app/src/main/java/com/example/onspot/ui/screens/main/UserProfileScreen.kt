@@ -126,7 +126,7 @@ fun UserProfileScreen(
 
         if (showOptionsBottomSheet) {
             ImageOptionsBottomSheet(
-                pictureUrl = userProfileViewModel.userDetails.value.data?.profilePictureUrl ?: "",
+                pictureUrl = userProfileViewModel.currentUserDetails.value.data?.profilePictureUrl ?: "",
                 sheetState = optionsSheetState,
                 onDismiss = { showOptionsBottomSheet = false },
                 onTakePhoto = {

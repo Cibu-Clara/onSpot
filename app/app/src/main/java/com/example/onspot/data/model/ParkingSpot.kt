@@ -9,9 +9,7 @@ data class ParkingSpot(
     val additionalInfo: String = "",
     val photoUrl: String,
     val documentUrl: String = "",
-    val isApproved: Boolean = false,
-    val isReserved: Boolean = false,
     val userId: String
 ) {
-    constructor() : this("", "", "", "",0, "", "","", false, false, "")
+    constructor() : this("", "", "", "",0, "", "","", "")
 }

@@ -10,7 +10,7 @@ sealed class Screens(val route: String) {
     // main screens
     object SearchScreen : Screens(route = "SearchScreen")
     object OfferScreen : Screens(route = "OfferScreen")
-    object InboxScreen : Screens(route = "InboxScreen")
+    object ReservationsScreen : Screens(route = "ReservationsScreen")
     object UserProfileScreen : Screens(route = "UserProfileScreen")
 
     // secondary screens
