@@ -10,14 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -33,7 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.onspot.data.model.Marker
 import com.example.onspot.data.model.ParkingSpot
 import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.ui.theme.lightPurple
@@ -76,12 +69,12 @@ fun OfferBox(
     ) {
         Column {
             Text(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 15.dp),
                 text = "Which of your parking spots would you like to offer?",
                 fontSize = 15.sp,
                 fontFamily = RegularFont
             )
-            DropDownMenuComponent(
+            DropDownMenuParkingSpots(
                 label = "Select one of your parking spots",
                 options = parkingSpots,
                 onTextSelected = {
@@ -201,65 +194,5 @@ fun OfferBox(
             onConfirm = { showDialog = false },
             onDismiss = { showDialog = false }
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DropDownMenuComponent(
-    label: String,
-    options: List<ParkingSpot>,
-    onTextSelected: (ParkingSpot) -> Unit
-) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    var selectedText by rememberSaveable { mutableStateOf("No parking spot selected") }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 15.dp)
-    ) {
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
-        ) {
-            OutlinedTextField(
-                value = selectedText,
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier
-                    .menuAnchor()
-                    .fillMaxWidth(),
-                keyboardOptions = KeyboardOptions.Default,
-                label = { Text(text = label) },
-                singleLine = true,
-                maxLines = 1,
-            )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier.background(Color.White)
-            ) {
-                if (options.isNotEmpty()) {
-                    options.forEach { parkingSpot ->
-                        DropdownMenuItem(
-                            onClick = {
-                                selectedText = parkingSpot.address
-                                onTextSelected(parkingSpot)
-                                expanded = false
-                            },
-                            text = { Text(text = parkingSpot.address) }
-                        )
-                    }
-                } else {
-                    DropdownMenuItem(
-                        text = { Text("You have not registered any parking spots yet.") },
-                        onClick = { },
-                        enabled = false
-                    )
-                }
-            }
-        }
     }
 }

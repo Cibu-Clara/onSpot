@@ -18,9 +18,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -53,15 +57,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.onspot.R
+import com.example.onspot.data.model.Marker
 import com.example.onspot.data.model.ParkingSpot
+import com.example.onspot.data.model.Vehicle
 import com.example.onspot.navigation.Screens
 import com.example.onspot.ui.theme.RegularFont
+import com.example.onspot.ui.theme.green
 import com.example.onspot.ui.theme.lightPurple
 import com.example.onspot.ui.theme.purple
 import com.example.onspot.utils.Resource
+import com.example.onspot.viewmodel.SearchViewModel
 import com.example.onspot.viewmodel.UserProfileViewModel
 import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.Date
 import java.util.Locale
 
@@ -116,12 +126,25 @@ fun ImageOptionsBottomSheet(
 @Composable
 fun ParkingSpotDetailsBottomSheet(
     parkingSpot: ParkingSpot,
+    marker: Marker,
     sheetState: SheetState,
     onDismiss: () -> Unit,
+    onReserve: () -> Unit,
     userProfileViewModel: UserProfileViewModel
 ) {
     val userDetails by userProfileViewModel.userDetails.collectAsState()
     val context = LocalContext.current
+    val now by rememberSaveable { mutableStateOf(LocalDateTime.now()) }
+
+    val startDate = LocalDate.parse(marker.startDate)
+    val startTime = LocalTime.parse(marker.startTime)
+    val endDate = LocalDate.parse(marker.endDate)
+    val endTime = LocalTime.parse(marker.endTime)
+    val endDateTime = LocalDateTime.of(endDate, endTime)
+    val startDateTime = LocalDateTime.of(startDate, startTime)
+
+    val isButtonDisabled = endDateTime.isBefore(now)
+    val isCurrentlyAvailable = startDateTime.isBefore(now) && endDateTime.isAfter(now)
 
     ModalBottomSheet(
         sheetState = sheetState,
@@ -142,6 +165,31 @@ fun ParkingSpotDetailsBottomSheet(
                 fontFamily = RegularFont,
                 fontSize = 20.sp
             )
+            if (isCurrentlyAvailable) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 5.dp)) {
+                    Text(text = "•", fontSize = 16.sp, modifier = Modifier.padding(end = 4.dp), color = green)
+                    Text(
+                        text = "Available now",
+                        fontFamily = RegularFont,
+                        fontSize = 12.sp,
+                        color = green
+                    )
+                }
+                Text(
+                    text = "until ${marker.endDate} at ${marker.endTime}",
+                    fontFamily = RegularFont,
+                    color = Color.DarkGray,
+                    fontSize = 12.sp
+                )
+            } else {
+                Text(
+                    text = "Available from ${marker.startDate} at ${marker.startTime} to ${marker.endDate} at ${marker.endTime}",
+                    fontFamily = RegularFont,
+                    color = Color.DarkGray,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(top = 5.dp)
+                )
+            }
             when (userDetails) {
                 is Resource.Loading -> {
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -238,15 +286,26 @@ fun ParkingSpotDetailsBottomSheet(
                                 }
                             }
                         }
-                        Text(
-                            text = "More details will be provided after ${user.firstName} accepts your reservation request.",
-                            fontFamily = RegularFont,
-                            color = Color.Gray,
-                            fontSize = 13.sp,
-                            modifier = Modifier.padding(start = 20.dp)
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = "Info",
+                                tint = Color.Gray,
+                                modifier = Modifier
+                                    .padding(start = 20.dp, end = 15.dp)
+                                    .size(21.dp)
+                            )
+                            Text(
+                                text = "More details will be provided after ${user.firstName} accepts your reservation request.",
+                                fontFamily = RegularFont,
+                                color = Color.Gray,
+                                fontSize = 13.sp,
+                                modifier = Modifier.padding(end = 20.dp)
+                            )
+                        }
                         Button(
-                            onClick = {  },
+                            onClick = onReserve,
+                            enabled = ! isButtonDisabled,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = purple,
                                 contentColor = Color.White
@@ -262,10 +321,76 @@ fun ParkingSpotDetailsBottomSheet(
                 }
                 is Resource.Error -> {
                     LaunchedEffect(key1 = true) {
-                        Toast.makeText(context, "Error fetching user details", Toast.LENGTH_LONG)
-                            .show()
+                        Toast.makeText(context, "Error fetching user details", Toast.LENGTH_LONG).show()
                     }
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun VehicleOptionsBottomSheet(
+    searchViewModel: SearchViewModel,
+    sheetState: SheetState,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    val vehicles by searchViewModel.vehicles.collectAsState()
+    lateinit var vehiclesList : List<Vehicle>
+
+    val context = LocalContext.current
+
+    var vehicleId by rememberSaveable { mutableStateOf("") }
+
+    when (vehicles) {
+        is Resource.Loading -> {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                CircularProgressIndicator()
+            }
+        }
+        is Resource.Success -> {
+            vehiclesList = vehicles.data!!
+        }
+        is Resource.Error -> {
+            LaunchedEffect(key1 = true) {
+                Toast.makeText(context, "Error fetching vehicles", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    ModalBottomSheet(
+        sheetState = sheetState,
+        onDismissRequest = { onDismiss() }
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 10.dp),
+                text = "Which of your vehicles would you like to park there?",
+                fontSize = 15.sp,
+                fontFamily = RegularFont
+            )
+            DropDownMenuVehicles(
+                label = "Select one of your vehicles",
+                options = vehiclesList,
+                onTextSelected = { vehicleId = it.uuid }
+            )
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = purple,
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.padding(top = 10.dp)
+            ) {
+                Text(
+                    text = "Confirm vehicle and reserve",
+                    fontFamily = RegularFont
+                )
             }
         }
     }

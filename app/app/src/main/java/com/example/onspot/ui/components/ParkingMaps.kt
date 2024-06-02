@@ -106,6 +106,8 @@ fun ParkingMapSearch(
     var selectedMarker by remember { mutableStateOf<Marker?>(null) }
     val parkingSpotDetails by parkingSpotViewModel.parkingSpotDetails.collectAsState()
     val bottomSheetState = rememberModalBottomSheetState()
+    val chooseVehicleSheetState = rememberModalBottomSheetState()
+    var showVehicleOptionsSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = mapReady) {
         if (mapReady) {
@@ -235,6 +237,7 @@ fun ParkingMapSearch(
                 if (parkingSpot != null) {
                     ParkingSpotDetailsBottomSheet(
                         parkingSpot = parkingSpot,
+                        marker = selectedMarker!!,
                         sheetState = bottomSheetState,
                         onDismiss = {
                             selectedMarker = null
@@ -242,8 +245,37 @@ fun ParkingMapSearch(
                                 bottomSheetState.hide()
                             }
                         },
+                        onReserve = {
+                            scope.launch {
+                                bottomSheetState.hide()
+                            }
+                            scope.launch {
+                                chooseVehicleSheetState.show()
+                                showVehicleOptionsSheet = true
+                            }
+                        },
                         userProfileViewModel = userProfileViewModel
                     )
+                    if (showVehicleOptionsSheet) {
+                        VehicleOptionsBottomSheet(
+                            searchViewModel = searchViewModel,
+                            sheetState = chooseVehicleSheetState,
+                            onDismiss = {
+                                selectedMarker = null
+                                scope.launch {
+                                    chooseVehicleSheetState.hide()
+                                    showVehicleOptionsSheet = false
+                                }
+                            },
+                            onConfirm = {
+                                selectedMarker = null
+                                scope.launch {
+                                    chooseVehicleSheetState.hide()
+                                    showVehicleOptionsSheet = false
+                                }
+                            }
+                        )
+                    }
                 }
             }
             is Resource.Error -> {

@@ -194,6 +194,22 @@ fun UserInfoRow(
                     fontFamily = RegularFont,
                     color = Color.Gray
                 )
+                Row (
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "★",
+                        fontSize = 18.sp,
+                        fontFamily = RegularFont,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(end = 5.dp)
+                    )
+                    Text(
+                        text = "4.9/5",
+                        fontFamily = RegularFont,
+                        color = Color.Gray,
+                    )
+                }
             }
             Box {
                 if (profilePictureUrl.isNotEmpty()) {

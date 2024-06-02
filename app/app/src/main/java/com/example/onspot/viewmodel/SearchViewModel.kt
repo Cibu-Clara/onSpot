@@ -3,8 +3,14 @@ package com.example.onspot.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.onspot.data.model.Marker
+import com.example.onspot.data.model.ParkingSpot
+import com.example.onspot.data.model.Vehicle
 import com.example.onspot.data.repository.MarkerRepository
 import com.example.onspot.data.repository.MarkerRepositoryImpl
+import com.example.onspot.data.repository.ParkingSpotRepository
+import com.example.onspot.data.repository.ParkingSpotRepositoryImpl
+import com.example.onspot.data.repository.VehicleRepository
+import com.example.onspot.data.repository.VehicleRepositoryImpl
 import com.example.onspot.utils.Resource
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.AutocompletePrediction
@@ -18,8 +24,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class SearchViewModel : ViewModel(){
+class SearchViewModel : ViewModel() {
+    private val vehicleRepository: VehicleRepository = VehicleRepositoryImpl()
     private val markerRepository: MarkerRepository = MarkerRepositoryImpl()
+
+    private val _vehicles = MutableStateFlow<Resource<List<Vehicle>>>(Resource.Loading())
+    val vehicles: StateFlow<Resource<List<Vehicle>>> = _vehicles.asStateFlow()
 
     private val _markers = MutableStateFlow<Resource<List<Marker>>>(Resource.Loading())
     val markers: StateFlow<Resource<List<Marker>>> = _markers.asStateFlow()
@@ -29,11 +39,18 @@ class SearchViewModel : ViewModel(){
 
     init {
         fetchMarkers()
+        fetchVehicles()
     }
 
     private fun fetchMarkers() = viewModelScope.launch {
         markerRepository.getAllMarkers().collect { markersResource ->
             _markers.value = markersResource
+        }
+    }
+
+    private fun fetchVehicles() = viewModelScope.launch {
+        vehicleRepository.getVehicles().collect { vehiclesResource ->
+            _vehicles.value = vehiclesResource
         }
     }
 
