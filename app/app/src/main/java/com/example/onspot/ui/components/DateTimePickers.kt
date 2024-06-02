@@ -27,6 +27,7 @@ import java.time.LocalTime
 @Composable
 fun DatePicker(
     label: String,
+    autocompleteDate: String = "",
     enabled: Boolean = true,
     onDateSelected: (LocalDate) -> Unit,
     greaterThan: LocalDate,
@@ -41,7 +42,7 @@ fun DatePicker(
         enabled = enabled,
         label = { Text(text = label) },
         keyboardOptions = KeyboardOptions.Default,
-        value = if (defaultDate) pickedDate.toString() else "",
+        value = if (defaultDate) pickedDate.toString() else autocompleteDate,
         onValueChange = {},
         readOnly = true,
         singleLine = true,
@@ -88,6 +89,7 @@ fun DatePicker(
 @Composable
 fun TimePicker(
     label: String,
+    autocompleteTime: String = "",
     enabled: Boolean = true,
     onTimeSelected: (LocalTime) -> Unit,
     greaterThan: LocalTime,
@@ -102,7 +104,7 @@ fun TimePicker(
         enabled = enabled,
         label = {Text(text = label)},
         keyboardOptions = KeyboardOptions.Default,
-        value = if (defaultTime) pickedTime.toString() else "",
+        value = if (defaultTime) pickedTime.toString() else autocompleteTime,
         onValueChange = {},
         readOnly = true,
         singleLine = true,

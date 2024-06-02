@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -97,10 +98,10 @@ fun ParkingMapSearch(
 
     var filterDialogVisible by remember { mutableStateOf(false) }
     var isFilterApplied by remember { mutableStateOf(false) }
-    var startDate by remember { mutableStateOf<LocalDate?>(null) }
-    var startTime by remember { mutableStateOf<LocalTime?>(null) }
-    var endDate by remember { mutableStateOf<LocalDate?>(null) }
-    var endTime by remember { mutableStateOf<LocalTime?>(null) }
+    val startDate = remember { mutableStateOf<LocalDate?>(null) }
+    val startTime = remember { mutableStateOf<LocalTime?>(null) }
+    val endDate = remember { mutableStateOf<LocalDate?>(null) }
+    val endTime = remember { mutableStateOf<LocalTime?>(null) }
     val currentUserId = Firebase.auth.currentUser?.uid
 
     var selectedMarker by remember { mutableStateOf<Marker?>(null) }
@@ -148,21 +149,24 @@ fun ParkingMapSearch(
             if (customIcon != null) {
                 val now = LocalDateTime.now()
                 markersList.filter { marker ->
-                    val markerEndDate = LocalDate.parse(marker.endDate)
-                    val markerEndTime = LocalTime.parse(marker.endTime)
-                    val markerEndDateTime = LocalDateTime.of(markerEndDate, markerEndTime)
+                    val markerStartDateTime = LocalDateTime.of(LocalDate.parse(marker.startDate), LocalTime.parse(marker.startTime))
+                    val markerEndDateTime = LocalDateTime.of(LocalDate.parse(marker.endDate), LocalTime.parse(marker.endTime))
+
+                    val startDateTime = if (startDate.value != null && startTime.value != null) {
+                        LocalDateTime.of(startDate.value, startTime.value)
+                    } else { null }
+                    val endDateTime = if (endDate.value != null && endTime.value != null) {
+                        LocalDateTime.of(endDate.value, endTime.value)
+                    } else { null }
+
+                    val isIntervalValid = startDateTime == null || markerStartDateTime <= startDateTime
+                    val isOk = endDateTime == null || endDateTime <= markerEndDateTime
+
+                    val isNotReserved = !marker.isReserved
+                    val isNotCurrentUser = marker.userId != currentUserId
                     val isEndDateTimeValid = markerEndDateTime.isAfter(now)
 
-                    val isStartDateValid = startDate == null || LocalDate.parse(marker.startDate) <= startDate
-                    val isEndDateValid = endDate == null || LocalDate.parse(marker.endDate) >= endDate
-                    val isStartTimeValid = startTime == null || LocalTime.parse(marker.startTime) <= startTime
-                    val isEndTimeValid = endTime == null || LocalTime.parse(marker.endTime) >= endTime
-
-                    val isNotReserved = ! marker.isReserved
-                    val isNotCurrentUser = marker.userId != currentUserId
-
-                    isEndDateTimeValid && isStartDateValid && isEndDateValid && isStartTimeValid
-                            && isEndTimeValid && isNotReserved && isNotCurrentUser
+                    isEndDateTimeValid && isNotReserved && isNotCurrentUser && isIntervalValid && isOk
                 }.forEach { marker ->
                     Marker(
                         state = MarkerState(position = LatLng(marker.latitude, marker.longitude)),
@@ -180,10 +184,10 @@ fun ParkingMapSearch(
         if (isFilterApplied) {
             Button(
                 onClick = {
-                    startDate = null
-                    startTime = null
-                    endDate = null
-                    endTime = null
+                    startDate.value = null
+                    startTime.value = null
+                    endDate.value = null
+                    endTime.value = null
                     isFilterApplied = false
                 },
                 modifier = Modifier
@@ -216,10 +220,10 @@ fun ParkingMapSearch(
         FilterDialog(
             onDismiss = { filterDialogVisible = false },
             onApplyFilter = { sDate, sTime, eDate, eTime ->
-                startDate = sDate
-                startTime = sTime
-                endDate = eDate
-                endTime = eTime
+                startDate.value = sDate
+                startTime.value = sTime
+                endDate.value = eDate
+                endTime.value = eTime
                 filterDialogVisible = false
                 isFilterApplied = true
             }
@@ -257,8 +261,16 @@ fun ParkingMapSearch(
                         userProfileViewModel = userProfileViewModel
                     )
                     if (showVehicleOptionsSheet) {
+
+                        var vehicleId = rememberSaveable { mutableStateOf("") }
+
                         VehicleOptionsBottomSheet(
                             searchViewModel = searchViewModel,
+                            vehicleId = vehicleId,
+                            startDate = startDate,
+                            startTime = startTime,
+                            endDate = endDate,
+                            endTime = endTime,
                             sheetState = chooseVehicleSheetState,
                             onDismiss = {
                                 selectedMarker = null

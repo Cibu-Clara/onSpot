@@ -18,15 +18,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,7 +57,6 @@ import com.example.onspot.R
 import com.example.onspot.data.model.Marker
 import com.example.onspot.data.model.ParkingSpot
 import com.example.onspot.data.model.Vehicle
-import com.example.onspot.navigation.Screens
 import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.ui.theme.green
 import com.example.onspot.ui.theme.lightPurple
@@ -72,6 +68,7 @@ import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Locale
 
@@ -333,6 +330,11 @@ fun ParkingSpotDetailsBottomSheet(
 @Composable
 fun VehicleOptionsBottomSheet(
     searchViewModel: SearchViewModel,
+    vehicleId: MutableState<String>,
+    startDate: MutableState<LocalDate?>,
+    startTime: MutableState<LocalTime?>,
+    endDate: MutableState<LocalDate?>,
+    endTime: MutableState<LocalTime?>,
     sheetState: SheetState,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
@@ -342,7 +344,12 @@ fun VehicleOptionsBottomSheet(
 
     val context = LocalContext.current
 
-    var vehicleId by rememberSaveable { mutableStateOf("") }
+    var isStartDateEmpty by rememberSaveable { mutableStateOf(startDate.value == null) }
+    var isStartTimeEmpty by rememberSaveable { mutableStateOf(startTime.value == null) }
+    var isEndDateEmpty by rememberSaveable { mutableStateOf(endDate.value == null) }
+    var isEndTimeEmpty by rememberSaveable { mutableStateOf(endTime.value == null) }
+    val isButtonEnabled = vehicleId.value.isNotEmpty() && !isStartDateEmpty &&
+            !isStartTimeEmpty && !isEndDateEmpty && !isEndTimeEmpty
 
     when (vehicles) {
         is Resource.Loading -> {
@@ -365,7 +372,6 @@ fun VehicleOptionsBottomSheet(
         onDismissRequest = { onDismiss() }
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
@@ -377,20 +383,104 @@ fun VehicleOptionsBottomSheet(
             DropDownMenuVehicles(
                 label = "Select one of your vehicles",
                 options = vehiclesList,
-                onTextSelected = { vehicleId = it.uuid }
+                onTextSelected = { vehicleId.value = it.uuid }
             )
-            Button(
-                onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = purple,
-                    contentColor = Color.White
-                ),
-                modifier = Modifier.padding(top = 10.dp)
+            Text(
+                text = "During what period will you use the parking spot?",
+                fontFamily = RegularFont,
+                fontWeight = FontWeight.Normal,
+                fontSize = 15.sp,
+                modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 20.dp)
             ) {
+                Text(text = "•", fontSize = 24.sp, modifier = Modifier.padding(end = 8.dp))
                 Text(
-                    text = "Confirm vehicle and reserve",
-                    fontFamily = RegularFont
+                    text = "From:",
+                    fontFamily = RegularFont,
+                    fontSize = 15.sp,
                 )
+            }
+            Row (modifier = Modifier.padding(horizontal = 20.dp)) {
+                DatePicker(
+                    label = "Date",
+                    autocompleteDate = if (startDate.value != null) startDate.value.toString() else "",
+                    onDateSelected = {
+                        startDate.value = it
+                        isStartDateEmpty = false
+                    },
+                    greaterThan = LocalDate.now().minusDays(1),
+                    modifier = Modifier.weight(0.5f)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                TimePicker(
+                    label = "Time",
+                    autocompleteTime = if (startTime.value != null) startTime.value.toString() else "",
+                    enabled = !isStartDateEmpty,
+                    onTimeSelected = {
+                        startTime.value = it
+                        isStartTimeEmpty = false
+                    },
+                    greaterThan = if (startDate.value == LocalDate.now()) LocalTime.now().truncatedTo(
+                        ChronoUnit.MINUTES) else LocalTime.MIN,
+                    modifier = Modifier.weight(0.5f)
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp)) {
+                Text(text = "•", fontSize = 24.sp, modifier = Modifier.padding(end = 8.dp))
+                Text(
+                    text = "To:",
+                    fontFamily = RegularFont,
+                    fontSize = 15.sp,
+                )
+            }
+            Row(modifier = Modifier.padding(horizontal = 20.dp)) {
+                DatePicker(
+                    label = "Date",
+                    autocompleteDate = if (endDate.value != null) endDate.value.toString() else "",
+                    enabled = !isStartDateEmpty,
+                    onDateSelected = { date ->
+                        endDate.value = date
+                        isEndDateEmpty = false
+                    },
+                    greaterThan = if (startDate.value != null) startDate.value!!.minusDays(1) else LocalDate.now(),
+                    modifier = Modifier.weight(0.5f)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                TimePicker(
+                    label = "Time",
+                    autocompleteTime = if (endTime.value != null) endTime.value.toString() else "",
+                    enabled = !isStartTimeEmpty && !isEndDateEmpty,
+                    onTimeSelected = {
+                        endTime.value = it
+                        isEndTimeEmpty = false
+                    },
+                    greaterThan = if(startDate.value == endDate.value && startDate.value != null) startTime.value!!.plusHours(1) else LocalTime.MIN,
+                    modifier = Modifier.weight(0.5f)
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(
+                    onClick = onConfirm,
+                    enabled = isButtonEnabled,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = purple,
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier.padding(top = 10.dp)
+                ) {
+                    Text(
+                        text = "Confirm and reserve",
+                        fontFamily = RegularFont
+                    )
+                }
             }
         }
     }
