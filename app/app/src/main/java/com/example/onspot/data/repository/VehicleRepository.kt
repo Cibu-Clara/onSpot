@@ -11,4 +11,5 @@ interface VehicleRepository {
     fun addVehicle(vehicle: Vehicle): Flow<Resource<Void?>>
     fun getVehicles(): Flow<Resource<List<Vehicle>>>
     fun deleteVehicle(vehicleId: String): Flow<Resource<Void?>>
+    fun toggleVehicleChosen(vehicleId: String): Flow<Resource<Void?>>
 }

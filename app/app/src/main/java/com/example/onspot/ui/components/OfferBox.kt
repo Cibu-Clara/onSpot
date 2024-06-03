@@ -33,6 +33,7 @@ import com.example.onspot.ui.theme.lightPurple
 import com.example.onspot.ui.theme.purple
 import com.example.onspot.viewmodel.OfferViewModel
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -59,7 +60,8 @@ fun OfferBox(
     val isButtonEnabled = parkingSpotId.isNotEmpty() && !isStartDateEmpty &&
             !isStartTimeEmpty && !isEndDateEmpty && !isEndTimeEmpty
     val markers = offerViewModel.markers.collectAsState().value
-    var showDialog by remember { mutableStateOf(false) }
+    var showDialogAlreadyOffered by remember { mutableStateOf(false) }
+    var showDialogInvalidPeriod by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -167,14 +169,21 @@ fun OfferBox(
                 Button(
                     enabled = isButtonEnabled,
                     onClick = {
-                        val existingMarker = markers.data?.any { it.parkingSpotId == parkingSpotId }
-                        if (existingMarker == true) {
-                            showDialog = true
+                        val startDateTime = LocalDateTime.of(startDate, startTime)
+                        val endDateTime = LocalDateTime.of(endDate, endTime)
+                        if (startDateTime.isAfter(endDateTime)) {
+                            showDialogInvalidPeriod = true
                         } else {
-                            offerViewModel.createMarker(UUID.randomUUID().toString(), startDate.toString(),
-                                startTime.toString(), endDate.toString(), endTime.toString(), parkingSpotId)
-                            showOfferBox.value = false
-                            showMap.value = true
+                            val existingMarker = markers.data?.any { it.parkingSpotId == parkingSpotId }
+                            if (existingMarker == true) {
+                                showDialogAlreadyOffered = true
+                            }
+                            else {
+                                offerViewModel.createMarker(UUID.randomUUID().toString(), startDate.toString(),
+                                    startTime.toString(), endDate.toString(), endTime.toString(), parkingSpotId)
+                                showOfferBox.value = false
+                                showMap.value = true
+                            }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -187,12 +196,20 @@ fun OfferBox(
             }
         }
     }
-    if (showDialog) {
+    if (showDialogAlreadyOffered) {
         CustomAlertDialog(
             title = "Error",
-            text = "You have already offered this parking spot!",
-            onConfirm = { showDialog = false },
-            onDismiss = { showDialog = false }
+            text = "You have already offered this parking spot.",
+            onConfirm = { showDialogAlreadyOffered = false },
+            onDismiss = { showDialogAlreadyOffered = false }
+        )
+    }
+    if (showDialogInvalidPeriod) {
+        CustomAlertDialog(
+            title = "Error",
+            text = "Start date and time must be before end date and time.",
+            onConfirm = { showDialogInvalidPeriod = false },
+            onDismiss = { showDialogInvalidPeriod = false }
         )
     }
 }

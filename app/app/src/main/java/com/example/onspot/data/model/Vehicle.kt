@@ -8,7 +8,7 @@ data class Vehicle(
     val model: String,
     val year: Int,
     val color: String,
-    val isChosen: Boolean = false,
+    val chosen: Boolean = false,
     val userId: String
 ) {
     constructor() : this("", "", "", "", "", 0, "", false, "")

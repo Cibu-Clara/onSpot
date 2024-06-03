@@ -46,6 +46,7 @@ import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.ui.theme.lightPurple
 import com.example.onspot.ui.theme.purple
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
@@ -250,6 +251,8 @@ fun FilterDialog(
     var isEndDateEmpty by rememberSaveable { mutableStateOf(true) }
     var endTime by rememberSaveable { mutableStateOf(LocalTime.NOON) }
     var isEndTimeEmpty by rememberSaveable { mutableStateOf(true) }
+    var showDialog by rememberSaveable { mutableStateOf(false) }
+    val isButtonEnabled = !isStartDateEmpty && !isEndDateEmpty && !isStartTimeEmpty && !isEndTimeEmpty
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
@@ -338,9 +341,16 @@ fun FilterDialog(
             }
         },
         confirmButton = {
-            Button(onClick = {
-                onApplyFilter(startDate, startTime, endDate, endTime)
-            }) {
+            Button(
+                onClick = {
+                    val startDateTime = LocalDateTime.of(startDate, startTime)
+                    val endDateTime = LocalDateTime.of(endDate, endTime)
+                    if (startDateTime.isBefore(endDateTime)) {
+                        onApplyFilter(startDate, startTime, endDate, endTime)
+                        } else { showDialog = true }
+                    },
+                enabled = isButtonEnabled
+            ) {
                 Text("Apply")
             }
         },
@@ -358,4 +368,12 @@ fun FilterDialog(
             }
         }
     )
+    if (showDialog) {
+        CustomAlertDialog(
+            title = "Error",
+            text = "Start date and time must be before end date and time.",
+            onConfirm = { showDialog = false },
+            onDismiss = { showDialog = false }
+        )
+    }
 }

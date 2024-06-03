@@ -50,7 +50,6 @@ class UserRepositoryImpl : UserRepository {
                     firstName = account.givenName ?: "",
                     lastName = account.familyName ?: "",
                     email = firebaseUser.email!!,
-                    isAdmin = false,
                     creationTimestamp = creationTimestamp
                 )
                 usersCollection

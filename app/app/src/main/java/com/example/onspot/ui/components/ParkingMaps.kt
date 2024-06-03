@@ -61,6 +61,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 import com.example.onspot.utils.getAddressLatLng
 import com.example.onspot.viewmodel.ParkingSpotViewModel
+import com.example.onspot.viewmodel.ReservationViewModel
 import com.example.onspot.viewmodel.SearchViewModel
 import com.example.onspot.viewmodel.UserProfileViewModel
 import com.google.android.gms.maps.model.BitmapDescriptor
@@ -72,6 +73,7 @@ import com.google.maps.android.compose.MarkerState
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,6 +81,7 @@ fun ParkingMapSearch(
     searchViewModel: SearchViewModel,
     parkingSpotViewModel: ParkingSpotViewModel = viewModel(),
     userProfileViewModel: UserProfileViewModel = viewModel(),
+    reservationViewModel: ReservationViewModel = viewModel(),
     placesClient: PlacesClient,
     markersList: List<Marker>,
     modifier: Modifier = Modifier
@@ -95,6 +98,8 @@ fun ParkingMapSearch(
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(defaultCoordinates, 7f)
     }
+    val addReservationState = reservationViewModel.addReservationState.collectAsState(initial = null)
+    val toggleVehicleChosenState = searchViewModel.toggleVehicleChosenState.collectAsState(initial = null)
 
     var filterDialogVisible by remember { mutableStateOf(false) }
     var isFilterApplied by remember { mutableStateOf(false) }
@@ -106,9 +111,44 @@ fun ParkingMapSearch(
 
     var selectedMarker by remember { mutableStateOf<Marker?>(null) }
     val parkingSpotDetails by parkingSpotViewModel.parkingSpotDetails.collectAsState()
+    val reservations = reservationViewModel.reservations.collectAsState().value
+    var filteredMarkers by remember { mutableStateOf(markersList) }
+
     val bottomSheetState = rememberModalBottomSheetState()
     val chooseVehicleSheetState = rememberModalBottomSheetState()
     var showVehicleOptionsSheet by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
+
+    fun updateFilteredMarkers() {
+        val now = LocalDateTime.now()
+        filteredMarkers = markersList.filter { marker ->
+            val markerStartDateTime = LocalDateTime.of(LocalDate.parse(marker.startDate), LocalTime.parse(marker.startTime))
+            val markerEndDateTime = LocalDateTime.of(LocalDate.parse(marker.endDate), LocalTime.parse(marker.endTime))
+
+            val startDateTime = if (startDate.value != null && startTime.value != null) {
+                LocalDateTime.of(startDate.value, startTime.value)
+            } else null
+            val endDateTime = if (endDate.value != null && endTime.value != null) {
+                LocalDateTime.of(endDate.value, endTime.value)
+            } else null
+
+            val isIntervalValid = (startDateTime == null || markerStartDateTime <= startDateTime) &&
+                    (endDateTime == null || endDateTime <= markerEndDateTime)
+
+            val isNotReserved = !marker.reserved
+            val isNotCurrentUser = marker.userId != currentUserId
+            val isEndDateTimeValid = markerEndDateTime.isAfter(now)
+
+            val userReservations = reservations.data?.filter { it.userId == currentUserId }
+            val isReservedByUser = userReservations?.any { it.markerId == marker.uuid } == true
+
+            isEndDateTimeValid && isNotReserved && isNotCurrentUser && isIntervalValid && !isReservedByUser
+        }
+    }
+
+    LaunchedEffect(key1 = reservations, key2 = markersList) {
+        updateFilteredMarkers()
+    }
 
     LaunchedEffect(key1 = mapReady) {
         if (mapReady) {
@@ -147,27 +187,7 @@ fun ParkingMapSearch(
             }
         ) {
             if (customIcon != null) {
-                val now = LocalDateTime.now()
-                markersList.filter { marker ->
-                    val markerStartDateTime = LocalDateTime.of(LocalDate.parse(marker.startDate), LocalTime.parse(marker.startTime))
-                    val markerEndDateTime = LocalDateTime.of(LocalDate.parse(marker.endDate), LocalTime.parse(marker.endTime))
-
-                    val startDateTime = if (startDate.value != null && startTime.value != null) {
-                        LocalDateTime.of(startDate.value, startTime.value)
-                    } else { null }
-                    val endDateTime = if (endDate.value != null && endTime.value != null) {
-                        LocalDateTime.of(endDate.value, endTime.value)
-                    } else { null }
-
-                    val isIntervalValid = startDateTime == null || markerStartDateTime <= startDateTime
-                    val isOk = endDateTime == null || endDateTime <= markerEndDateTime
-
-                    val isNotReserved = !marker.isReserved
-                    val isNotCurrentUser = marker.userId != currentUserId
-                    val isEndDateTimeValid = markerEndDateTime.isAfter(now)
-
-                    isEndDateTimeValid && isNotReserved && isNotCurrentUser && isIntervalValid && isOk
-                }.forEach { marker ->
+                filteredMarkers.forEach { marker ->
                     Marker(
                         state = MarkerState(position = LatLng(marker.latitude, marker.longitude)),
                         title = "Parking Spot",
@@ -189,6 +209,7 @@ fun ParkingMapSearch(
                     endDate.value = null
                     endTime.value = null
                     isFilterApplied = false
+                    updateFilteredMarkers()
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -226,6 +247,7 @@ fun ParkingMapSearch(
                 endTime.value = eTime
                 filterDialogVisible = false
                 isFilterApplied = true
+                updateFilteredMarkers()
             }
         )
     }
@@ -261,12 +283,15 @@ fun ParkingMapSearch(
                         userProfileViewModel = userProfileViewModel
                     )
                     if (showVehicleOptionsSheet) {
-
-                        var vehicleId = rememberSaveable { mutableStateOf("") }
+                        val id by rememberSaveable { mutableStateOf(UUID.randomUUID().toString()) }
+                        val vehicleId = rememberSaveable { mutableStateOf("") }
+                        val isVehicleChosen = rememberSaveable { mutableStateOf(false) }
 
                         VehicleOptionsBottomSheet(
                             searchViewModel = searchViewModel,
                             vehicleId = vehicleId,
+                            isVehicleChosen = isVehicleChosen,
+                            marker = selectedMarker!!,
                             startDate = startDate,
                             startTime = startTime,
                             endDate = endDate,
@@ -275,15 +300,33 @@ fun ParkingMapSearch(
                             onDismiss = {
                                 selectedMarker = null
                                 scope.launch {
+                                    startDate.value = null
+                                    startTime.value = null
+                                    endDate.value = null
+                                    endTime.value = null
                                     chooseVehicleSheetState.hide()
                                     showVehicleOptionsSheet = false
                                 }
                             },
                             onConfirm = {
-                                selectedMarker = null
-                                scope.launch {
-                                    chooseVehicleSheetState.hide()
+                                if (isVehicleChosen.value) {
+                                    showDialog = true
+                                } else {
+                                    searchViewModel.toggleVehicleChosen(vehicleId.value)
+                                    reservationViewModel.addReservation(
+                                        id = id,
+                                        status = "Pending",
+                                        startDate = startDate.value.toString(),
+                                        startTime = startTime.value.toString(),
+                                        endDate = endDate.value.toString(),
+                                        endTime = endTime.value.toString(),
+                                        userId = currentUserId!!,
+                                        markerId = selectedMarker!!.uuid,
+                                        vehicleId = vehicleId.value
+                                    )
+                                    selectedMarker = null
                                     showVehicleOptionsSheet = false
+                                    updateFilteredMarkers()
                                 }
                             }
                         )
@@ -295,6 +338,45 @@ fun ParkingMapSearch(
                     Toast.makeText(context, "Error fetching parking spot details", Toast.LENGTH_LONG).show()
                 }
             }
+        }
+    }
+    if (showDialog) {
+        CustomAlertDialog(
+            title = "Error",
+            text = "You are already using this vehicle in another reservation.",
+            onConfirm = { showDialog = false },
+            onDismiss = { showDialog = false }
+        )
+    }
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+        if (addReservationState.value?.isLoading == true || toggleVehicleChosenState.value?.isLoading == true) {
+            CircularProgressIndicator()
+        }
+    }
+    LaunchedEffect(key1 = addReservationState.value?.isSuccess) {
+        if (addReservationState.value?.isSuccess?.isNotEmpty() == true) {
+            updateFilteredMarkers()
+            val success = addReservationState.value?.isSuccess
+            Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+        }
+    }
+    LaunchedEffect(key1 = addReservationState.value?.isError) {
+        if (addReservationState.value?.isError?.isNotEmpty() == true) {
+            val error = addReservationState.value?.isError
+            Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+        }
+    }
+    LaunchedEffect(key1 = toggleVehicleChosenState.value?.isSuccess) {
+        if (toggleVehicleChosenState.value?.isSuccess?.isNotEmpty() == true) {
+            val success = toggleVehicleChosenState.value?.isSuccess
+            Log.i("TOGGLE VEHICLE CHOSEN", "$success")
+        }
+    }
+    LaunchedEffect(key1 = toggleVehicleChosenState.value?.isError) {
+        if (toggleVehicleChosenState.value?.isError?.isNotEmpty() == true) {
+            val error = toggleVehicleChosenState.value?.isError
+            Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+            Log.e("TOGGLE VEHICLE CHOSEN", "$error")
         }
     }
 }

@@ -3,14 +3,12 @@ package com.example.onspot.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.onspot.data.model.Marker
-import com.example.onspot.data.model.ParkingSpot
 import com.example.onspot.data.model.Vehicle
 import com.example.onspot.data.repository.MarkerRepository
 import com.example.onspot.data.repository.MarkerRepositoryImpl
-import com.example.onspot.data.repository.ParkingSpotRepository
-import com.example.onspot.data.repository.ParkingSpotRepositoryImpl
 import com.example.onspot.data.repository.VehicleRepository
 import com.example.onspot.data.repository.VehicleRepositoryImpl
+import com.example.onspot.ui.states.ToggleVehicleChosenState
 import com.example.onspot.utils.Resource
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.AutocompletePrediction
@@ -18,9 +16,11 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -37,12 +37,15 @@ class SearchViewModel : ViewModel() {
     private val _suggestions = MutableStateFlow<List<AutocompletePrediction>>(emptyList())
     val suggestions: StateFlow<List<AutocompletePrediction>> = _suggestions.asStateFlow()
 
+    private val _toggleVehicleChosenState = Channel<ToggleVehicleChosenState>()
+    val toggleVehicleChosenState = _toggleVehicleChosenState.receiveAsFlow()
+
     init {
         fetchMarkers()
         fetchVehicles()
     }
 
-    private fun fetchMarkers() = viewModelScope.launch {
+     private fun fetchMarkers() = viewModelScope.launch {
         markerRepository.getAllMarkers().collect { markersResource ->
             _markers.value = markersResource
         }
@@ -70,5 +73,15 @@ class SearchViewModel : ViewModel() {
         val request = FetchPlaceRequest.builder(placeId, listOf(Place.Field.LAT_LNG)).build()
         val response = placesClient.fetchPlace(request).await()
         return response.place.latLng ?: LatLng(0.0, 0.0)
+    }
+
+    fun toggleVehicleChosen(vehicleId: String) = viewModelScope.launch {
+        vehicleRepository.toggleVehicleChosen(vehicleId).collect { result ->
+            when(result) {
+                is Resource.Loading -> { _toggleVehicleChosenState.send(ToggleVehicleChosenState(isLoading = true)) }
+                is Resource.Success -> { _toggleVehicleChosenState.send(ToggleVehicleChosenState(isSuccess = "Vehicle chosen status successfully toggled")) }
+                is Resource.Error -> { _toggleVehicleChosenState.send(ToggleVehicleChosenState(isError = result.message)) }
+            }
+        }
     }
 }

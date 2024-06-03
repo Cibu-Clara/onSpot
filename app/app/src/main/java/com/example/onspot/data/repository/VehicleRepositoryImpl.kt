@@ -73,5 +73,26 @@ class VehicleRepositoryImpl : VehicleRepository {
             emit(Resource.Error(e.message ?: "Failed to delete vehicle"))
         }
     }
-
+    override fun toggleVehicleChosen(vehicleId: String): Flow<Resource<Void?>> = flow {
+        try {
+            emit(Resource.Loading())
+            val vehicleDocument = vehiclesCollection
+                .document(vehicleId)
+                .get()
+                .await()
+            val vehicle = vehicleDocument.toObject(Vehicle::class.java)
+            if (vehicle != null) {
+                val newChosenStatus = !vehicle.chosen
+                vehiclesCollection
+                    .document(vehicleId)
+                    .update("chosen", newChosenStatus)
+                    .await()
+                emit(Resource.Success(null))
+            } else {
+                emit(Resource.Error("Vehicle not found"))
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Failed to toggle vehicle chosen status"))
+        }
+    }
 }

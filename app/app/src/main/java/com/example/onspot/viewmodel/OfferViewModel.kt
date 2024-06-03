@@ -91,7 +91,16 @@ class OfferViewModel : ViewModel() {
     }
 
     fun createMarker(markerId: String, startDate: String, startTime: String, endDate: String, endTime: String, parkingSpotId: String) {
-        tempMarker = tempMarker.copy(uuid = markerId, startDate = startDate, startTime = startTime, endDate = endDate, endTime = endTime, isReserved = false, parkingSpotId = parkingSpotId, userId = "")
+        tempMarker = tempMarker.copy(
+            uuid = markerId,
+            startDate = startDate,
+            startTime = startTime,
+            endDate = endDate,
+            endTime = endTime,
+            reserved = false,
+            parkingSpotId = parkingSpotId,
+            userId = ""
+        )
     }
 
     fun finalizeMarker(latitude: Double, longitude: Double) = viewModelScope.launch {

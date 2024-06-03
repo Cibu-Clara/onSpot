@@ -331,6 +331,8 @@ fun ParkingSpotDetailsBottomSheet(
 fun VehicleOptionsBottomSheet(
     searchViewModel: SearchViewModel,
     vehicleId: MutableState<String>,
+    isVehicleChosen: MutableState<Boolean>,
+    marker: Marker,
     startDate: MutableState<LocalDate?>,
     startTime: MutableState<LocalTime?>,
     endDate: MutableState<LocalDate?>,
@@ -350,6 +352,8 @@ fun VehicleOptionsBottomSheet(
     var isEndTimeEmpty by rememberSaveable { mutableStateOf(endTime.value == null) }
     val isButtonEnabled = vehicleId.value.isNotEmpty() && !isStartDateEmpty &&
             !isStartTimeEmpty && !isEndDateEmpty && !isEndTimeEmpty
+    var showDialogUnavailable by rememberSaveable { mutableStateOf(false) }
+    var showDialogInvalidPeriod by rememberSaveable { mutableStateOf(false) }
 
     when (vehicles) {
         is Resource.Loading -> {
@@ -366,7 +370,6 @@ fun VehicleOptionsBottomSheet(
             }
         }
     }
-
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = { onDismiss() }
@@ -383,7 +386,10 @@ fun VehicleOptionsBottomSheet(
             DropDownMenuVehicles(
                 label = "Select one of your vehicles",
                 options = vehiclesList,
-                onTextSelected = { vehicleId.value = it.uuid }
+                onTextSelected = {
+                    vehicleId.value = it.uuid
+                    isVehicleChosen.value = it.chosen
+                }
             )
             Text(
                 text = "During what period will you use the parking spot?",
@@ -468,7 +474,28 @@ fun VehicleOptionsBottomSheet(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Button(
-                    onClick = onConfirm,
+                    onClick = {
+                        val markerStartDateTime = LocalDateTime.of(LocalDate.parse(marker.startDate), LocalTime.parse(marker.startTime))
+                        val markerEndDateTime = LocalDateTime.of(LocalDate.parse(marker.endDate), LocalTime.parse(marker.endTime))
+
+                        val startDateTime = if (startDate.value != null && startTime.value != null) {
+                            LocalDateTime.of(startDate.value, startTime.value)
+                        } else { null }
+                        val endDateTime = if (endDate.value != null && endTime.value != null) {
+                            LocalDateTime.of(endDate.value, endTime.value)
+                        } else { null }
+
+                        val isIntervalValid = (startDateTime == null || markerStartDateTime <= startDateTime)
+                                && (endDateTime == null || endDateTime <= markerEndDateTime)
+
+                        if (startDateTime != null && endDateTime != null && startDateTime.isAfter(endDateTime)) {
+                            showDialogInvalidPeriod = true
+                        } else if (!isIntervalValid) {
+                            showDialogUnavailable = true
+                        } else {
+                            onConfirm()
+                        }
+                    },
                     enabled = isButtonEnabled,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = purple,
@@ -477,12 +504,28 @@ fun VehicleOptionsBottomSheet(
                     modifier = Modifier.padding(top = 10.dp)
                 ) {
                     Text(
-                        text = "Confirm and reserve",
+                        text = "Confirm and request reservation",
                         fontFamily = RegularFont
                     )
                 }
             }
         }
+    }
+    if (showDialogUnavailable) {
+        CustomAlertDialog(
+            title = "Error",
+            text = "The period you selected is not available.",
+            onConfirm = { showDialogUnavailable = false },
+            onDismiss = { showDialogUnavailable = false }
+        )
+    }
+    if (showDialogInvalidPeriod) {
+        CustomAlertDialog(
+            title = "Error",
+            text = "Start date and time must be before end date and time.",
+            onConfirm = { showDialogInvalidPeriod = false },
+            onDismiss = { showDialogInvalidPeriod = false }
+        )
     }
 }
 

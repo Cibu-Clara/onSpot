@@ -98,10 +98,14 @@ class ParkingSpotRepositoryImpl : ParkingSpotRepository {
                 .await()
 
             val documentUrl = parkingSpotDocument.getString("documentUrl")
-
             if (!documentUrl.isNullOrEmpty()) {
                 val documentRef = storageReference.child("documents/${parkingSpotId}")
                 documentRef.delete().await()
+            }
+            val photoUrl = parkingSpotDocument.getString("photoUrl")
+            if (!photoUrl.isNullOrEmpty()) {
+                val photoRef = storageReference.child("parkingSpotsPictures/${parkingSpotId}")
+                photoRef.delete().await()
             }
             emit(Resource.Success(null))
         } catch (e: Exception) {

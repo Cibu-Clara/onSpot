@@ -8,7 +8,7 @@ data class Marker(
     val startTime: String,
     val endDate: String,
     val endTime: String,
-    val isReserved: Boolean,
+    val reserved: Boolean = false,
     val parkingSpotId: String,
     val userId: String
 ) {
