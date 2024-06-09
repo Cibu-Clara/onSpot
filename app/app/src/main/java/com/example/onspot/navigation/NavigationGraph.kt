@@ -83,6 +83,9 @@ fun NavigationGraph(
         }
 
         // Reviews Screen
-        composable(route = Screens.ReviewsScreen.route) { ReviewsScreen(navController) }
+        composable(route = Screens.ReviewsScreen.route) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            ReviewsScreen(navController, userId)
+        }
     }
 }

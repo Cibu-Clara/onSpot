@@ -42,8 +42,8 @@ fun BottomNavigationBar(
     val items = listOf(
         BottomNavigationItem("Offer", Icons.Filled.AddCircleOutline, Icons.Outlined.AddCircleOutline, false, route = Screens.OfferScreen.route),
         BottomNavigationItem("Search", Icons.Filled.Search, Icons.Outlined.Search, false, route = Screens.SearchScreen.route),
-        BottomNavigationItem("Reservations", Icons.Filled.Menu, Icons.Outlined.Menu, false, 16, route = Screens.ReservationsScreen.route),
-        BottomNavigationItem("Profile", Icons.Filled.Person, Icons.Outlined.Person, true, route = Screens.UserProfileScreen.route),
+        BottomNavigationItem("Reservations", Icons.Filled.Menu, Icons.Outlined.Menu, false, 1, route = Screens.ReservationsScreen.route),
+        BottomNavigationItem("Profile", Icons.Filled.Person, Icons.Outlined.Person, false, route = Screens.UserProfileScreen.route),
     )
 
     NavigationBar {

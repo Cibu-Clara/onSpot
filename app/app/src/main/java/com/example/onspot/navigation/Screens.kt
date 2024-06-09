@@ -27,5 +27,9 @@ sealed class Screens(val route: String) {
             return "VehicleDetailsScreen/$vehicleId"
         }
     }
-    object ReviewsScreen : Screens(route = "ReviewsScreen")
+    object ReviewsScreen : Screens(route = "ReviewsScreen/{userId}") {
+        fun createRoute(userId: String): String {
+            return "ReviewsScreen/$userId"
+        }
+    }
 }

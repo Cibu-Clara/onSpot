@@ -186,7 +186,7 @@ fun AddParkingSpotScreen(
                             .padding(horizontal = 30.dp, vertical = 20.dp),
                         fontFamily = RegularFont,
                         color = Color.Gray,
-                        fontSize = 16.sp
+                        fontSize = 15.sp
                     )
                     Column(
                         modifier = Modifier

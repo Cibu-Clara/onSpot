@@ -9,7 +9,8 @@ data class Reservation(
     val endTime: String,
     val userId: String,
     val markerId: String,
+    val parkingSpotId: String,
     val vehicleId: String
 ) {
-    constructor() : this("", "", "", "", "", "", "", "", "")
+    constructor() : this("", "", "", "", "", "", "", "", "", "")
 }

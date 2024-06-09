@@ -7,14 +7,22 @@ import androidx.compose.material.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.onspot.ui.components.CustomTopBar
+import com.example.onspot.viewmodel.ReviewViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun ReviewsScreen(
-    navController: NavController
+    navController: NavController,
+    userId: String,
+    reviewViewModel: ReviewViewModel = viewModel()
 ) {
+    val currentUserId = Firebase.auth.currentUser?.uid
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -22,7 +30,7 @@ fun ReviewsScreen(
         Scaffold(
             topBar = {
                 CustomTopBar(
-                    title = "Your reviews",
+                    title = if (userId == currentUserId) "Your reviews" else "Someone's reviews",
                     onBackClick = { navController.popBackStack() }
                 )
             }

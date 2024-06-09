@@ -183,7 +183,7 @@ fun VehicleDetailsScreen(
         }
         if (showDeleteConfirmationDialog) {
             CustomAlertDialog(
-                title = "Delete confirmation",
+                title = "Delete Confirmation",
                 text = "Are you sure you want to delete this vehicle?",
                 confirmButtonText = "Yes",
                 dismissButtonText = "No",

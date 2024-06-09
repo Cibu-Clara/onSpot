@@ -206,7 +206,7 @@ fun OfferBox(
     }
     if (showDialogInvalidPeriod) {
         CustomAlertDialog(
-            title = "Error",
+            title = "Warning",
             text = "Start date and time must be before end date and time.",
             onConfirm = { showDialogInvalidPeriod = false },
             onDismiss = { showDialogInvalidPeriod = false }

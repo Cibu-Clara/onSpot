@@ -298,8 +298,8 @@ fun ParkingMapSearch(
                             endTime = endTime,
                             sheetState = chooseVehicleSheetState,
                             onDismiss = {
-                                selectedMarker = null
                                 scope.launch {
+                                    selectedMarker = null
                                     startDate.value = null
                                     startTime.value = null
                                     endDate.value = null
@@ -312,21 +312,28 @@ fun ParkingMapSearch(
                                 if (isVehicleChosen.value) {
                                     showDialog = true
                                 } else {
-                                    searchViewModel.toggleVehicleChosen(vehicleId.value)
-                                    reservationViewModel.addReservation(
-                                        id = id,
-                                        status = "Pending",
-                                        startDate = startDate.value.toString(),
-                                        startTime = startTime.value.toString(),
-                                        endDate = endDate.value.toString(),
-                                        endTime = endTime.value.toString(),
-                                        userId = currentUserId!!,
-                                        markerId = selectedMarker!!.uuid,
-                                        vehicleId = vehicleId.value
-                                    )
-                                    selectedMarker = null
-                                    showVehicleOptionsSheet = false
-                                    updateFilteredMarkers()
+                                    scope.launch {
+                                        searchViewModel.toggleVehicleChosen(vehicleId.value)
+                                        reservationViewModel.addReservation(
+                                            id = id,
+                                            status = "Pending",
+                                            startDate = startDate.value.toString(),
+                                            startTime = startTime.value.toString(),
+                                            endDate = endDate.value.toString(),
+                                            endTime = endTime.value.toString(),
+                                            userId = currentUserId!!,
+                                            markerId = selectedMarker!!.uuid,
+                                            parkingSpotId = selectedMarker!!.parkingSpotId,
+                                            vehicleId = vehicleId.value
+                                        )
+                                        selectedMarker = null
+                                        startDate.value = null
+                                        startTime.value = null
+                                        endDate.value = null
+                                        endTime.value = null
+                                        showVehicleOptionsSheet = false
+                                        updateFilteredMarkers()
+                                    }
                                 }
                             }
                         )

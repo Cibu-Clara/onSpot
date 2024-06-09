@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 
@@ -42,6 +43,23 @@ class MarkerRepositoryImpl : MarkerRepository {
             emit(Resource.Error(e.message ?: "Failed to fetch markers"))
         }
     }
+
+    override fun getMarkerById(markerId: String): Flow<Resource<Marker>> = flow {
+        emit(Resource.Loading())
+        val markerDocument = markersCollection
+            .document(markerId)
+            .get()
+            .await()
+        val marker = markerDocument.toObject(Marker::class.java)
+        if (marker != null) {
+            emit(Resource.Success(marker))
+        } else {
+            emit(Resource.Error("Marker not found"))
+        }
+    }.catch { e ->
+        emit(Resource.Error(e.message ?: "Failed to fetch marker details"))
+    }
+
 
     override fun deleteMarkers(expiredMarkers: List<Marker>): Flow<Resource<Void?>> = flow {
         try {

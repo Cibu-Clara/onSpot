@@ -75,12 +75,12 @@ class VehicleRepositoryImpl : VehicleRepository {
     }
     override fun toggleVehicleChosen(vehicleId: String): Flow<Resource<Void?>> = flow {
         try {
-            emit(Resource.Loading())
             val vehicleDocument = vehiclesCollection
                 .document(vehicleId)
                 .get()
                 .await()
             val vehicle = vehicleDocument.toObject(Vehicle::class.java)
+
             if (vehicle != null) {
                 val newChosenStatus = !vehicle.chosen
                 vehiclesCollection

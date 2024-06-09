@@ -153,9 +153,8 @@ fun UserInfo(
     ) {
         UserInfoRow(
             navController = navController,
-            firstName = user.firstName,
+            user = user,
             signUpDate = signUpDate,
-            profilePictureUrl = user.profilePictureUrl,
             showBottomSheet = showBottomSheet
         )
         ParkingSpots(navController = navController, parkingSpots = parkingSpots)
@@ -166,9 +165,8 @@ fun UserInfo(
 @Composable
 fun UserInfoRow(
     navController: NavController,
-    firstName: String,
+    user: User,
     signUpDate: String,
-    profilePictureUrl: String,
     showBottomSheet: () -> Unit
 ) {
     Column(
@@ -183,7 +181,7 @@ fun UserInfoRow(
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = firstName,
+                    text = user.firstName,
                     fontWeight = FontWeight.Bold,
                     fontFamily = RegularFont,
                     fontSize = 27.sp,
@@ -212,9 +210,9 @@ fun UserInfoRow(
                 }
             }
             Box {
-                if (profilePictureUrl.isNotEmpty()) {
+                if (user.profilePictureUrl.isNotEmpty()) {
                     Image(
-                        painter = rememberAsyncImagePainter(profilePictureUrl),
+                        painter = rememberAsyncImagePainter(user.profilePictureUrl),
                         contentDescription = "Profile Picture",
                         modifier = Modifier
                             .size(97.dp)
@@ -258,7 +256,10 @@ fun UserInfoRow(
             modifier = Modifier
                 .padding(top = 10.dp)
                 .clip(shape = RoundedCornerShape(10.dp))
-                .clickable { navController.navigate(Screens.ReviewsScreen.route) },
+                .clickable {
+                    val route = Screens.ReviewsScreen.createRoute(user.uuid)
+                    navController.navigate(route)
+                           },
             text = "View all reviews",
             fontFamily = RegularFont,
             color = purple

@@ -58,7 +58,8 @@ class ParkingSpotViewModel : ViewModel() {
         }
     }
 
-    fun addParkingSpot(id: String, country: String, city: String, address: String, bayNumber: Int, additionalInfo: String, photoUrl: String, documentUrl: String) = viewModelScope.launch {
+    fun addParkingSpot(id: String, country: String, city: String, address: String, bayNumber: Int,
+                       additionalInfo: String, photoUrl: String, documentUrl: String) = viewModelScope.launch {
         val parkingSpot = ParkingSpot(
             uuid = id,
             country = country,

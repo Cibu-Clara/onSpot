@@ -256,7 +256,7 @@ fun ParkingSpotDetailsScreen(
                                 modifier = Modifier
                                     .padding(top = 20.dp)
                                     .fillMaxWidth()
-                                    .height(200.dp)
+                                    .height(250.dp)
                                     .clip(RoundedCornerShape(8.dp)),
                                 contentScale = ContentScale.Crop
                             )
@@ -290,7 +290,7 @@ fun ParkingSpotDetailsScreen(
     }
     if (showDeleteConfirmationDialog) {
         CustomAlertDialog(
-            title = "Delete confirmation",
+            title = "Delete Confirmation",
             text = "Are you sure you want to delete this parking spot?",
             confirmButtonText = "Yes",
             dismissButtonText = "No",
