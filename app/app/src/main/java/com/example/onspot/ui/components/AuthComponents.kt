@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
@@ -47,15 +48,23 @@ fun CustomTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
+    fullLabel: String = label,
     maxLines: Int = Int.MAX_VALUE,
     keyboardType: KeyboardType = KeyboardType.Text,
     isEnabled: Boolean = true
 ) {
+    var isFocused by remember { mutableStateOf(false) }
+    val displayLabel = if (isFocused) label else fullLabel
+
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .onFocusChanged { focusState ->
+                isFocused = focusState.isFocused
+            },
         colors = TextFieldDefaults.outlinedTextFieldColors(
             backgroundColor = lightPurple,
             focusedBorderColor = Color.Gray,
@@ -63,9 +72,8 @@ fun CustomTextField(
         ),
         enabled = isEnabled,
         shape = RoundedCornerShape(8.dp),
-        singleLine = true,
         maxLines = maxLines,
-        label = { Text(text = label, color = Color.Gray) }
+        label = { Text(text = displayLabel, color = Color.Gray) }
     )
 }
 

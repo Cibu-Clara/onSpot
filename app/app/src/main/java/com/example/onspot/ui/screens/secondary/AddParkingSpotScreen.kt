@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -40,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -224,10 +227,28 @@ fun AddParkingSpotScreen(
                         CustomTextField(
                             value = additionalInfo,
                             onValueChange = { additionalInfo = it },
-                            label = "Any other details you want to share with drivers so that they can find " +
+                            label = "Any other details you want to share with drivers",
+                            fullLabel = "Any other details you want to share with drivers so that they can find " +
                                     "and access your parking spot(e.g., entrance code, specific instructions)",
                             modifier = Modifier.padding(top = 10.dp)
                         )
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 10.dp)) {
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = "Info",
+                                tint = Color.Gray,
+                                modifier = Modifier
+                                    .padding(end = 15.dp)
+                                    .size(21.dp)
+                            )
+                            Text(
+                                text = "Bay number, additional info and parking spot picture will only be visible to the guest after you confirm their request.",
+                                fontFamily = RegularFont,
+                                color = Color.Gray,
+                                fontSize = 13.sp,
+                                modifier = Modifier.padding(end = 20.dp)
+                            )
+                        }
                         Button(
                             enabled = isUploadPhotoButtonEnabled,
                             modifier = Modifier.padding(top = 10.dp),

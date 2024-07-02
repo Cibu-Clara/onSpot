@@ -89,45 +89,45 @@ fun AboutYouTab(
                     }
                 }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                if (changeProfilePictureState.value?.isLoading == true || deleteProfilePictureState.value?.isLoading == true) {
-                    CircularProgressIndicator()
-                }
+        }
+    }
+    Row(
+        modifier = Modifier.fillMaxSize(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        if (changeProfilePictureState.value?.isLoading == true || deleteProfilePictureState.value?.isLoading == true) {
+            CircularProgressIndicator()
+        }
+    }
+    LaunchedEffect(key1 = changeProfilePictureState.value?.isSuccess) {
+        scope.launch {
+            if (changeProfilePictureState.value?.isSuccess?.isNotEmpty() == true) {
+                val success = changeProfilePictureState.value?.isSuccess
+                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
             }
-            LaunchedEffect(key1 = changeProfilePictureState.value?.isSuccess) {
-                scope.launch {
-                    if (changeProfilePictureState.value?.isSuccess?.isNotEmpty() == true) {
-                        val success = changeProfilePictureState.value?.isSuccess
-                        Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
-                    }
-                }
+        }
+    }
+    LaunchedEffect(key1 = changeProfilePictureState.value?.isError) {
+        scope.launch {
+            if (changeProfilePictureState.value?.isError?.isNotEmpty() == true) {
+                val error = changeProfilePictureState.value?.isError
+                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
             }
-            LaunchedEffect(key1 = changeProfilePictureState.value?.isError) {
-                scope.launch {
-                    if (changeProfilePictureState.value?.isError?.isNotEmpty() == true) {
-                        val error = changeProfilePictureState.value?.isError
-                        Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
-                    }
-                }
+        }
+    }
+    LaunchedEffect(key1 = deleteProfilePictureState.value?.isSuccess) {
+        scope.launch {
+            if (deleteProfilePictureState.value?.isSuccess?.isNotEmpty() == true) {
+                val success = deleteProfilePictureState.value?.isSuccess
+                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
             }
-            LaunchedEffect(key1 = deleteProfilePictureState.value?.isSuccess) {
-                scope.launch {
-                    if (deleteProfilePictureState.value?.isSuccess?.isNotEmpty() == true) {
-                        val success = deleteProfilePictureState.value?.isSuccess
-                        Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
-            LaunchedEffect(key1 = deleteProfilePictureState.value?.isError) {
-                scope.launch {
-                    if (deleteProfilePictureState.value?.isError?.isNotEmpty() == true) {
-                        val error = deleteProfilePictureState.value?.isError
-                        Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
-                    }
-                }
+        }
+    }
+    LaunchedEffect(key1 = deleteProfilePictureState.value?.isError) {
+        scope.launch {
+            if (deleteProfilePictureState.value?.isError?.isNotEmpty() == true) {
+                val error = deleteProfilePictureState.value?.isError
+                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
             }
         }
     }
