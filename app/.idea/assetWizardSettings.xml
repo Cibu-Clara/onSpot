@@ -321,7 +321,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="file:/$USER_HOME$/AppData/Local/Android/Sdk/icons/material/materialicons/picture_as_pdf/baseline_picture_as_pdf_24.xml" />
+                                      <entry key="url" value="file:/$USER_HOME$/AppData/Local/Android/Sdk/icons/material/materialicons/star_rate/baseline_star_rate_24.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -331,8 +331,8 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="color" value="9e1b1b" />
-                            <entry key="outputName" value="ic_pdf" />
+                            <entry key="color" value="e0c62e" />
+                            <entry key="outputName" value="baseline_star_rate_24" />
                             <entry key="sourceFile" value="C:\Users\Clara\Documents\Clara\Github\Licenta\app" />
                           </map>
                         </option>

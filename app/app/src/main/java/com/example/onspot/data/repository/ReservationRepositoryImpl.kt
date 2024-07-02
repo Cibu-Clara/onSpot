@@ -28,6 +28,8 @@ class ReservationRepositoryImpl : ReservationRepository {
         FirebaseFirestore.getInstance().collection("users")
     private val vehiclesCollection: CollectionReference =
         FirebaseFirestore.getInstance().collection("vehicles")
+    private val reviewsCollection: CollectionReference =
+        FirebaseFirestore.getInstance().collection("reviews")
     private val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
 
     override fun createReservation(reservation: Reservation): Flow<Resource<Void?>> = flow {
@@ -252,6 +254,20 @@ class ReservationRepositoryImpl : ReservationRepository {
             emit(Resource.Success(null))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Failed to update marker reserved status"))
+        }
+    }
+
+    override suspend fun checkAlreadyReviewed(reservationId: String): Boolean {
+        return try {
+            val snapshot = reviewsCollection
+                .whereEqualTo("reservationId", reservationId)
+                .whereEqualTo("reviewerId", currentUserId)
+                .get()
+                .await()
+
+            snapshot.documents.isNotEmpty()
+        } catch (e: Exception) {
+            false
         }
     }
 }

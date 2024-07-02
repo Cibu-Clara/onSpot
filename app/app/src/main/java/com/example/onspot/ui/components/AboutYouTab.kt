@@ -203,7 +203,7 @@ fun UserInfoRow(
                         modifier = Modifier.padding(end = 5.dp)
                     )
                     Text(
-                        text = "4.9/5",
+                        text = "${user.rating}/5",
                         fontFamily = RegularFont,
                         color = Color.Gray,
                     )

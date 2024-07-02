@@ -13,9 +13,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TopAppBar
@@ -24,6 +26,8 @@ import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.StarRate
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -33,6 +37,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarColors
@@ -48,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -389,4 +395,77 @@ fun FilterDialog(
             onDismiss = { showDialog = false }
         )
     }
+}
+
+@Composable
+fun FeedbackDialog(
+    firstName: String,
+    onDismiss: () -> Unit,
+    onSend: (Float, String) -> Unit
+) {
+    var rating by rememberSaveable { mutableStateOf(0) }
+    var comment by rememberSaveable { mutableStateOf("") }
+    val isButtonEnabled =  (rating in 1..5) && comment.isNotEmpty()
+
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = {
+            Text(
+                text = "Leave feedback for $firstName",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = Color.Black
+            )
+        },
+        text = {
+            Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                ) {
+                    (1..5).forEach { index ->
+                        Icon(
+                            imageVector = if (index <= rating) Icons.Filled.StarRate else Icons.Filled.StarBorder,
+                            contentDescription = "Rating",
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clickable { rating = index },
+                            tint = if (index <= rating) Color.Yellow else Color.Gray
+                        )
+                    }
+                }
+                // Review text field
+                OutlinedTextField(
+                    value = comment,
+                    onValueChange = { comment = it },
+                    label = { Text("Review message") },
+                    placeholder = { Text("Write your review here...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 4,
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSend(rating.toFloat(), comment)} ,
+                enabled = isButtonEnabled
+            ) {
+                Text("Send")
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = {
+                    onDismiss()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.LightGray,
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
 }

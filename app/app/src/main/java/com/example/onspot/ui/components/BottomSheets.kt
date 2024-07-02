@@ -244,7 +244,7 @@ fun ParkingSpotDetailsBottomSheet(
                                         modifier = Modifier.padding(end = 5.dp)
                                     )
                                     Text(
-                                        text = "4.9/5",
+                                        text = "${user.rating}",
                                         fontFamily = RegularFont,
                                         color = Color.DarkGray,
                                     )

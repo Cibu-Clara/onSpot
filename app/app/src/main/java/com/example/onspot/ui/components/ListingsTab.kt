@@ -441,7 +441,7 @@ fun RequestItem(
                     modifier = Modifier.padding(end = 5.dp)
                 )
                 Text(
-                    text = if (requestDetails.user.firstName == "Maria") "4.1/5" else "5.00",
+                    text = "${requestDetails.user.rating}",
                     fontFamily = RegularFont,
                     color = Color.DarkGray,
                     fontSize = 12.sp,

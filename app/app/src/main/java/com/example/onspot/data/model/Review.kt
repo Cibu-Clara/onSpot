@@ -6,7 +6,8 @@ data class Review(
     val reviewedUserId: String,
     val rating: Float,
     val comment: String,
-    val timestamp: Long
+    val timestamp: Long,
+    val reservationId: String
 ) {
-    constructor() : this("", "", "", 0F, "", 0L)
+    constructor() : this("", "", "", 0F, "", 0L, "")
 }

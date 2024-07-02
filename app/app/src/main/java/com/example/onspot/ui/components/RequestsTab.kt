@@ -1,6 +1,5 @@
 package com.example.onspot.ui.components
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -53,8 +52,10 @@ import com.example.onspot.ui.theme.red
 import com.example.onspot.ui.theme.yellow
 import com.example.onspot.utils.Resource
 import com.example.onspot.viewmodel.ReservationViewModel
+import com.example.onspot.viewmodel.ReviewViewModel
 import com.example.onspot.viewmodel.SearchViewModel
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 @Composable
 fun RequestsTab(
@@ -115,7 +116,8 @@ fun ReservationsList(reservations: List<ReservationDetails>, reservationViewMode
 fun ReservationCard(
     details: ReservationDetails,
     reservationViewModel: ReservationViewModel,
-    searchViewModel: SearchViewModel = viewModel()
+    searchViewModel: SearchViewModel = viewModel(),
+    reviewViewModel: ReviewViewModel = viewModel()
 ) {
     val statusColor = when (details.reservation.status) {
         "Pending" -> yellow
@@ -128,9 +130,17 @@ fun ReservationCard(
     }
     var showMoreDetails by rememberSaveable { mutableStateOf(false) }
     var showCancelDialog by rememberSaveable { mutableStateOf(false) }
+    var showFeedbackDialog by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val deleteReservationState = reservationViewModel.deleteReservationState.collectAsState(initial = null)
+    val addReviewState = reviewViewModel.addReviewState.collectAsState(initial = null)
+    val reviewId by rememberSaveable { mutableStateOf(UUID.randomUUID().toString()) }
+    val hasReviewed by reservationViewModel.hasReviewed.collectAsState(initial = null)
+
+    LaunchedEffect(details.reservation.uuid) {
+        reservationViewModel.checkAlreadyReviewed(details.reservation.uuid)
+    }
 
     Card(
         modifier = Modifier
@@ -151,9 +161,9 @@ fun ReservationCard(
                     fontSize = 14.sp
                 )
             }
-            if (details.reservation.status == "Completed") {
+            if (hasReviewed == false && details.reservation.status == "Completed") {
                 Text(
-                    text = "Leave review for ${details.user.firstName}",
+                    text = "Leave feedback for ${details.user.firstName}",
                     fontSize = 13.sp,
                     fontFamily = RegularFont,
                     textDecoration = TextDecoration.Underline,
@@ -161,7 +171,7 @@ fun ReservationCard(
                     modifier = Modifier
                         .padding(bottom = 5.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .clickable { }
+                        .clickable { showFeedbackDialog = true }
                 )
             } else if (details.reservation.status == "Accepted" || details.reservation.status == "Pending") {
                 Text(
@@ -279,10 +289,7 @@ fun ReservationCard(
             text = "Are you sure you want to cancel this reservation?",
             onConfirm = {
                 scope.launch {
-                    Log.e("lool", details.vehicle.chosen.toString())
                     searchViewModel.toggleVehicleChosen(details.vehicle.uuid)
-                    Log.e("lool", details.vehicle.chosen.toString())
-
                     reservationViewModel.deleteReservation(details.reservation.uuid)
                 }
                 showCancelDialog = false
@@ -292,11 +299,29 @@ fun ReservationCard(
             dismissButtonText = "No"
         )
     }
+    if (showFeedbackDialog) {
+        FeedbackDialog(
+            firstName = details.user.firstName,
+            onDismiss = { showFeedbackDialog = false },
+            onSend = { rating, message ->
+                scope.launch {
+                    reviewViewModel.addReview(
+                        id = reviewId,
+                        reviewedUserId = details.user.uuid,
+                        rating = rating,
+                        comment = message,
+                        reservationId = details.reservation.uuid
+                    )
+                    showFeedbackDialog = false
+                }
+            }
+        )
+    }
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
     ) {
-        if (deleteReservationState.value?.isLoading == true) {
+        if (deleteReservationState.value?.isLoading == true || addReviewState.value?.isLoading == true) {
             CircularProgressIndicator()
         }
     }
@@ -312,6 +337,23 @@ fun ReservationCard(
         scope.launch {
             if (deleteReservationState.value?.isError?.isNotEmpty() == true) {
                 val error = deleteReservationState.value?.isError
+                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    LaunchedEffect(key1 = addReviewState.value?.isSuccess) {
+        scope.launch {
+            if (addReviewState.value?.isSuccess?.isNotEmpty() == true) {
+                val success = addReviewState.value?.isSuccess
+                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+                reservationViewModel.checkAlreadyReviewed(details.reservation.uuid)
+            }
+        }
+    }
+    LaunchedEffect(key1 = addReviewState.value?.isError) {
+        scope.launch {
+            if (addReviewState.value?.isError?.isNotEmpty() == true) {
+                val error = addReviewState.value?.isError
                 Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
             }
         }

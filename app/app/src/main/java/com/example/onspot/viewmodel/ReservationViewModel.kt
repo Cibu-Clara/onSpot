@@ -11,12 +11,17 @@ import com.example.onspot.data.repository.ReservationRepositoryImpl
 import com.example.onspot.ui.states.AddReservationState
 import com.example.onspot.ui.states.DeleteReservationState
 import com.example.onspot.utils.Resource
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class ReservationViewModel : ViewModel() {
     private val reservationRepository : ReservationRepository = ReservationRepositoryImpl()
@@ -41,6 +46,9 @@ class ReservationViewModel : ViewModel() {
 
     private val _selectedRequest = MutableStateFlow<RequestDetails?>(null)
     val selectedRequest: StateFlow<RequestDetails?> = _selectedRequest.asStateFlow()
+
+    private val _hasReviewed = MutableStateFlow<Boolean?>(null)
+    val hasReviewed: StateFlow<Boolean?> = _hasReviewed.asStateFlow()
 
     init {
         fetchReservations()
@@ -114,6 +122,10 @@ class ReservationViewModel : ViewModel() {
                 is Resource.Error -> { _addReservationState.send(AddReservationState(isError = result.message)) }
             }
         }
+    }
+
+    fun checkAlreadyReviewed(reservationId: String) = viewModelScope.launch {
+        _hasReviewed.value = reservationRepository.checkAlreadyReviewed(reservationId)
     }
 
     fun deleteReservation(id: String) = viewModelScope.launch {

@@ -6,7 +6,9 @@ data class User(
     val lastName: String,
     val email: String,
     val creationTimestamp: Long,
-    val profilePictureUrl: String = ""
+    val profilePictureUrl: String = "",
+    val rating: Float = 0F,
+    val ratingCount: Int = 0
 ) {
-    constructor() : this("", "", "", "", 0L, "")
+    constructor() : this("", "", "", "", 0L, "", 0F, 0)
 }
