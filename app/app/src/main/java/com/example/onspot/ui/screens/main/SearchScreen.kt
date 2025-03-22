@@ -82,6 +82,7 @@ fun SearchScreen(
                 searchViewModel = searchViewModel,
                 placesClient = placesClient,
                 markersList = markersList ?: emptyList(),
+                navController = navController,
                 modifier = Modifier.padding(paddingValues)
             )
         }

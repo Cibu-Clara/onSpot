@@ -1,5 +1,6 @@
 package com.example.onspot.ui.components
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,8 +37,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -52,19 +55,26 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.onspot.R
 import com.example.onspot.data.model.ListingDetails
 import com.example.onspot.data.model.RequestDetails
+import com.example.onspot.data.model.Reservation
+import com.example.onspot.navigation.Screens
 import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.ui.theme.lightPurple
 import com.example.onspot.ui.theme.purple
 import com.example.onspot.ui.theme.red
 import com.example.onspot.utils.Resource
 import com.example.onspot.viewmodel.ReservationViewModel
+import com.example.onspot.viewmodel.SearchViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun ListingsTab(
+    navController: NavController,
     reservationViewModel: ReservationViewModel
 ) {
     val listingDetails by reservationViewModel.listingsDetails.collectAsState()
@@ -78,7 +88,7 @@ fun ListingsTab(
         }
         is Resource.Success -> {
             val listings = (listingDetails as Resource.Success<List<ListingDetails>>).data
-            ListingsList(listings ?: emptyList(), reservationViewModel)
+            ListingsList(listings ?: emptyList(), reservationViewModel, navController)
         }
         is Resource.Error -> {
             LaunchedEffect(key1 = true) {
@@ -89,7 +99,7 @@ fun ListingsTab(
 }
 
 @Composable
-fun ListingsList(listings: List<ListingDetails>, reservationViewModel: ReservationViewModel) {
+fun ListingsList(listings: List<ListingDetails>, reservationViewModel: ReservationViewModel, navController: NavController) {
     if (listings.isEmpty()) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -113,18 +123,27 @@ fun ListingsList(listings: List<ListingDetails>, reservationViewModel: Reservati
     }
     LazyColumn {
         items(listings) { details ->
-            ListingCard(details, reservationViewModel)
+            ListingCard(details, reservationViewModel, navController)
         }
     }
 }
 
 @Composable
-fun ListingCard(details: ListingDetails, reservationViewModel: ReservationViewModel) {
+fun ListingCard(
+    details: ListingDetails,
+    reservationViewModel: ReservationViewModel,
+    navController: NavController,
+    searchViewModel: SearchViewModel = viewModel()
+) {
     var showMoreDetails by rememberSaveable { mutableStateOf(false) }
     var showRequestsDialog by rememberSaveable { mutableStateOf(false) }
     val requestsDetails by reservationViewModel.requestsDetails.collectAsState()
     var requests : List<RequestDetails>? = null
     val context = LocalContext.current
+    var showCancelDialog by rememberSaveable { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val deleteMarkerState = reservationViewModel.deleteMarkerState.collectAsState(initial = null)
+    val isReserved by remember { mutableStateOf(details.marker.reserved) }
 
     LaunchedEffect(details.marker.uuid) {
         reservationViewModel.fetchRequestsWithDetails(details.marker.uuid)
@@ -141,6 +160,26 @@ fun ListingCard(details: ListingDetails, reservationViewModel: ReservationViewMo
             }
         }
     }
+
+    val reservations by reservationViewModel.reservations.collectAsState()
+    var reservationsList: List<Reservation>? = null
+
+    LaunchedEffect(key1 = true) {
+        reservationViewModel.fetchReservations()
+    }
+
+    when (reservations) {
+        is Resource.Loading -> {}
+        is Resource.Success -> {
+            reservationsList = reservations.data?: emptyList()
+        }
+        is Resource.Error -> {
+            LaunchedEffect(key1 = true) {
+                Log.e("FETCH RESERVATIONS", "Error fetching reservations")
+            }
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -169,10 +208,10 @@ fun ListingCard(details: ListingDetails, reservationViewModel: ReservationViewMo
                 color = purple,
                 modifier = Modifier
                     .clip(RoundedCornerShape(10.dp))
-                    .clickable { }
+                    .clickable { showCancelDialog = true }
                     .padding(bottom = 4.dp)
             )
-            if (!details.marker.reserved) {
+            if (!isReserved) {
                 Text(
                     text = "View requests",
                     fontSize = 14.sp,
@@ -184,7 +223,7 @@ fun ListingCard(details: ListingDetails, reservationViewModel: ReservationViewMo
                 )
             } else {
                 Text(
-                    text = "Reserved by someone",
+                    text = "Reserved",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = RegularFont,
@@ -266,13 +305,61 @@ fun ListingCard(details: ListingDetails, reservationViewModel: ReservationViewMo
     if (showRequestsDialog) {
         RequestsDialog(
             requests = requests,
+            navController = navController,
             reservationViewModel = reservationViewModel,
+            searchViewModel = searchViewModel,
             onDismiss = { showRequestsDialog = false },
             onAccept = {
-                // reservationViewModel.acceptRequest(reservationViewModel.selectedRequest.value?.reservation?.uuid ?: "", details.marker.uuid)
                 showRequestsDialog = false
             }
         )
+    }
+    if (showCancelDialog) {
+        CustomAlertDialog(
+            title = "Cancel confirmation",
+            text = "Are you sure you want to cancel this offer?",
+            onConfirm = {
+                scope.launch {
+                    if (reservationsList != null) {
+                        for (r in reservationsList) {
+                            if (details.marker.uuid == r.markerId && (r.status == "Accepted" || r.status == "Pending")) {
+                                reservationViewModel.updateRequestStatus(r.uuid, "Canceled")
+                                searchViewModel.changeVehicleChosen(r.vehicleId, false)
+                            }
+                        }
+                    }
+                    reservationViewModel.deleteMarker(details.marker.uuid)
+                }
+                showCancelDialog = false
+            },
+            onDismiss = { showCancelDialog = false },
+            confirmButtonText = "Yes",
+            dismissButtonText = "No"
+        )
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        if (deleteMarkerState.value?.isLoading == true) {
+            CircularProgressIndicator()
+        }
+    }
+    LaunchedEffect(key1 = deleteMarkerState.value?.isSuccess) {
+        scope.launch {
+            if (deleteMarkerState.value?.isSuccess?.isNotEmpty() == true) {
+                val success = deleteMarkerState.value?.isSuccess
+                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    LaunchedEffect(key1 = deleteMarkerState.value?.isError) {
+        scope.launch {
+            if (deleteMarkerState.value?.isError?.isNotEmpty() == true) {
+                val error = deleteMarkerState.value?.isError
+                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 }
 
@@ -280,11 +367,18 @@ fun ListingCard(details: ListingDetails, reservationViewModel: ReservationViewMo
 @Composable
 fun RequestsDialog(
     requests: List<RequestDetails>?,
+    navController: NavController,
+    searchViewModel: SearchViewModel,
     reservationViewModel: ReservationViewModel,
     onDismiss: () -> Unit,
     onAccept: () -> Unit
 ) {
     val selectedRequest by reservationViewModel.selectedRequest.collectAsState()
+    val updateReservationStatus = reservationViewModel.updateReservationStatus.collectAsState(initial = null)
+    val acceptReservationState = reservationViewModel.acceptReservationState.collectAsState(initial = null)
+    val rejectReservationState = reservationViewModel.rejectReservationState.collectAsState(initial = null)
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
@@ -299,16 +393,24 @@ fun RequestsDialog(
         text = {
             RequestsList(
                 requests = requests ?: emptyList(),
+                navController = navController,
                 selectedRequest = selectedRequest,
                 onSelect = { reservationViewModel.selectRequest(it) },
                 onReject = {
-                    //reservationViewModel.rejectRequest(it.reservation.uuid)
+                    reservationViewModel.rejectRequest(it)
+                    searchViewModel.changeVehicleChosen(it.vehicle.uuid, false)
                 }
             )
         },
         confirmButton = {
             Button(
-                onClick = onAccept,
+                onClick = {
+                    selectedRequest?.let {
+                        reservationViewModel.acceptRequest(it)
+                        reservationViewModel.changeMarkerReserved(it.reservation.markerId, true)
+                    }
+                    onAccept()
+                },
                 enabled = selectedRequest != null
             ) {
                 Text("Accept request")
@@ -328,16 +430,79 @@ fun RequestsDialog(
             }
         }
     )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        if (updateReservationStatus.value?.isLoading == true || acceptReservationState.value?.isLoading == true || rejectReservationState.value?.isLoading == true) {
+            CircularProgressIndicator()
+        }
+    }
+    LaunchedEffect(key1 = updateReservationStatus.value?.isSuccess) {
+        scope.launch {
+            if (updateReservationStatus.value?.isSuccess?.isNotEmpty() == true) {
+                val success = updateReservationStatus.value?.isSuccess
+                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    LaunchedEffect(key1 = updateReservationStatus.value?.isError) {
+        scope.launch {
+            if (updateReservationStatus.value?.isError?.isNotEmpty() == true) {
+                val error = updateReservationStatus.value?.isError
+                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    LaunchedEffect(key1 = acceptReservationState.value?.isSuccess) {
+        scope.launch {
+            if (acceptReservationState.value?.isSuccess?.isNotEmpty() == true) {
+                val success = acceptReservationState.value?.isSuccess
+                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    LaunchedEffect(key1 = acceptReservationState.value?.isError) {
+        scope.launch {
+            if (acceptReservationState.value?.isError?.isNotEmpty() == true) {
+                val error = acceptReservationState.value?.isError
+                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    LaunchedEffect(key1 = rejectReservationState.value?.isSuccess) {
+        scope.launch {
+            if (rejectReservationState.value?.isSuccess?.isNotEmpty() == true) {
+                val success = rejectReservationState.value?.isSuccess
+                Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    LaunchedEffect(key1 = rejectReservationState.value?.isError) {
+        scope.launch {
+            if (rejectReservationState.value?.isError?.isNotEmpty() == true) {
+                val error = rejectReservationState.value?.isError
+                Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 }
 
 @Composable
 fun RequestsList(
     requests: List<RequestDetails>,
+    navController: NavController,
     selectedRequest: RequestDetails?,
     onSelect: (RequestDetails) -> Unit,
     onReject: (RequestDetails) -> Unit
 ) {
-    if (requests.isEmpty()) {
+    val pendingRequests = remember(requests) {
+        derivedStateOf {
+            requests.filter { it.reservation.status == "Pending" }
+        }
+    }
+
+    if (pendingRequests.value.isEmpty()) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
@@ -357,15 +522,17 @@ fun RequestsList(
                 color = Color.Gray,
             )
         }
-    }
-    LazyColumn {
-        items(requests) { request ->
-            RequestItem(
-                requestDetails = request,
-                isSelected = request == selectedRequest,
-                onSelect = { onSelect(request) },
-                onReject = { onReject(request) }
-            )
+    } else {
+        LazyColumn {
+            items(pendingRequests.value) { request ->
+                RequestItem(
+                    requestDetails = request,
+                    navController = navController,
+                    isSelected = request == selectedRequest,
+                    onSelect = { onSelect(request) },
+                    onReject = { onReject(request) }
+                )
+            }
         }
     }
 }
@@ -373,6 +540,7 @@ fun RequestsList(
 @Composable
 fun RequestItem(
     requestDetails: RequestDetails,
+    navController: NavController,
     isSelected: Boolean,
     onSelect: (RequestDetails) -> Unit,
     onReject: () -> Unit
@@ -450,7 +618,10 @@ fun RequestItem(
                 color = purple,
                 modifier = Modifier
                     .clip(shape = RoundedCornerShape(10.dp))
-                    .clickable { },
+                    .clickable {
+                        val route = Screens.ReviewsScreen.createRoute(requestDetails.user.uuid)
+                        navController.navigate(route)
+                    },
             )
             Text(
                 text = "From: ${requestDetails.reservation.startDate} ${requestDetails.reservation.startTime}",

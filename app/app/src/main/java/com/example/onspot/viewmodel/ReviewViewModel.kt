@@ -24,12 +24,6 @@ class ReviewViewModel : ViewModel() {
     private val _addReviewState = Channel<AddReviewState>()
     val addReviewState = _addReviewState.receiveAsFlow()
 
-//    fun fetchReviewsForUser(userId: String) = viewModelScope.launch {
-//        reviewRepository.getReviewsForUser(userId).collect { resource ->
-//            _reviews.value = resource
-//        }
-//    }
-
     fun fetchReviewsWithDetails(reviewedUserId: String) = viewModelScope.launch {
         reviewRepository.getReviewDetails(reviewedUserId).collect { resource ->
             _reviews.value = resource

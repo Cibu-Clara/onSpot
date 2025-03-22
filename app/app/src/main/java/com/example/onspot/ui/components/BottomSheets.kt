@@ -52,11 +52,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.onspot.R
 import com.example.onspot.data.model.Marker
 import com.example.onspot.data.model.ParkingSpot
 import com.example.onspot.data.model.Vehicle
+import com.example.onspot.navigation.Screens
 import com.example.onspot.ui.theme.RegularFont
 import com.example.onspot.ui.theme.green
 import com.example.onspot.ui.theme.lightPurple
@@ -127,7 +129,8 @@ fun ParkingSpotDetailsBottomSheet(
     sheetState: SheetState,
     onDismiss: () -> Unit,
     onReserve: () -> Unit,
-    userProfileViewModel: UserProfileViewModel
+    userProfileViewModel: UserProfileViewModel,
+    navController: NavController
 ) {
     val userDetails by userProfileViewModel.userDetails.collectAsState()
     val context = LocalContext.current
@@ -255,7 +258,10 @@ fun ParkingSpotDetailsBottomSheet(
                                     color = Color.DarkGray,
                                     modifier = Modifier
                                         .clip(shape = RoundedCornerShape(10.dp))
-                                        .clickable { },
+                                        .clickable {
+                                            val route = Screens.ReviewsScreen.createRoute(user.uuid)
+                                            navController.navigate(route)
+                                        },
                                 )
                             }
                             Box {

@@ -15,6 +15,6 @@ interface ReservationRepository {
     fun getListingsCurrentUser(): Flow<Resource<List<ListingDetails>>>
     fun getRequests(markerId: String): Flow<Resource<List<RequestDetails>>>
     fun updateRequestStatus(requestId: String, status: String): Flow<Resource<Void?>>
-    fun updateMarkerReserved(markerId: String, reserved: Boolean): Flow<Resource<Void?>>
+    fun changeMarkerReserved(markerId: String, reserved: Boolean): Flow<Resource<Void?>>
     suspend fun checkAlreadyReviewed(reservationId: String): Boolean
 }

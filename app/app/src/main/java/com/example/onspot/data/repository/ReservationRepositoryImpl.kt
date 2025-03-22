@@ -208,32 +208,14 @@ class ReservationRepositoryImpl : ReservationRepository {
         }
     }
 
-
     override fun updateRequestStatus(requestId: String, status: String): Flow<Resource<Void?>> = flow {
         try {
-            emit(Resource.Loading())
-
-            // Get the reservation to update
             val reservationDocument = reservationsCollection
                 .document(requestId)
                 .get()
                 .await()
-            val reservation = reservationDocument.toObject(Reservation::class.java)
-                ?: throw IllegalStateException("Reservation not found")
+            reservationDocument.toObject(Reservation::class.java) ?: throw IllegalStateException("Reservation not found")
 
-            // Check if there is already an accepted request for the marker
-            if (status == "accepted") {
-                val acceptedReservations = reservationsCollection
-                    .whereEqualTo("markerId", reservation.markerId)
-                    .whereEqualTo("status", "accepted")
-                    .get()
-                    .await()
-                if (acceptedReservations.documents.isNotEmpty()) {
-                    throw IllegalStateException("There is already an accepted request for this marker")
-                }
-            }
-
-            // Update the reservation status
             reservationsCollection
                 .document(requestId)
                 .update("status", status)
@@ -241,19 +223,29 @@ class ReservationRepositoryImpl : ReservationRepository {
             emit(Resource.Success(null))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Failed to update request status"))
+            Log.e("UPDATE STATUS", "FAILED")
         }
     }
 
-    override fun updateMarkerReserved(markerId: String, reserved: Boolean): Flow<Resource<Void?>> = flow {
+    override fun changeMarkerReserved(markerId: String, reserved: Boolean): Flow<Resource<Void?>> = flow {
         try {
-            emit(Resource.Loading())
-            markersCollection
+            val markerDocument = markersCollection
                 .document(markerId)
-                .update("reserved", reserved)
+                .get()
                 .await()
-            emit(Resource.Success(null))
+            val marker = markerDocument.toObject(Marker::class.java)
+
+            if (marker != null) {
+                markersCollection
+                    .document(markerId)
+                    .update("reserved", reserved)
+                    .await()
+                emit(Resource.Success(null))
+            } else {
+                emit(Resource.Error("Marker not found"))
+            }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to update marker reserved status"))
+            emit(Resource.Error(e.message ?: "Failed to change marker reserved status"))
         }
     }
 

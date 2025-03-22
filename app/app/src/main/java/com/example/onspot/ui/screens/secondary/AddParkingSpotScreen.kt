@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
@@ -54,6 +55,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.onspot.navigation.Screens
+import com.example.onspot.ui.components.CustomAlertDialog
 import com.example.onspot.ui.components.CustomButton
 import com.example.onspot.ui.components.CustomTextField
 import com.example.onspot.ui.components.CustomTopBar
@@ -76,7 +78,9 @@ fun AddParkingSpotScreen(
     var country by rememberSaveable { mutableStateOf("") }
     var city by rememberSaveable { mutableStateOf("") }
     var address by rememberSaveable { mutableStateOf("") }
-    var bayNumber by rememberSaveable { mutableStateOf("") }
+    var bayNumberText by rememberSaveable { mutableStateOf("") }
+    val bayNumber = bayNumberText.toIntOrNull()
+    val isBayNumberValid = bayNumber != null
     var additionalInfo by rememberSaveable { mutableStateOf("") }
     var photoUrl by rememberSaveable { mutableStateOf("") }
     var originalFileNameJPG by rememberSaveable { mutableStateOf("") }
@@ -87,12 +91,13 @@ fun AddParkingSpotScreen(
     val id by rememberSaveable { mutableStateOf(UUID.randomUUID()) }
 
     val isAddButtonEnabled = country.isNotBlank() && city.isNotBlank() && address.isNotBlank()
-            && bayNumber.isNotBlank() && photoUrl.isNotBlank() && documentUrl.isNotBlank()
+            && bayNumberText.isNotBlank() && photoUrl.isNotBlank() && documentUrl.isNotBlank()
     val isUploadPhotoButtonEnabled = photoUrl.isBlank()
     var isViewPhotoButtonEnabled = photoUrl.isNotBlank()
     val isUploadPDFButtonEnabled = documentUrl.isBlank()
     var isViewPDFButtonEnabled = documentUrl.isNotBlank()
     var showOptionsBottomSheet by rememberSaveable { mutableStateOf(false) }
+    var showWarningDialog by rememberSaveable { mutableStateOf(false) }
     val optionsSheetState = rememberModalBottomSheetState()
 
     val scope = rememberCoroutineScope()
@@ -157,16 +162,21 @@ fun AddParkingSpotScreen(
                 CustomButton(
                     onClick = {
                         scope.launch {
-                            parkingSpotViewModel.addParkingSpot(
-                                id = id.toString(),
-                                country = country,
-                                city = city,
-                                address = address,
-                                bayNumber = bayNumber.toInt(),
-                                additionalInfo = additionalInfo,
-                                photoUrl = photoUrl,
-                                documentUrl = documentUrl
-                            )
+                            if (bayNumber != null) {
+                                parkingSpotViewModel.addParkingSpot(
+                                    id = id.toString(),
+                                    country = country,
+                                    city = city,
+                                    address = address,
+                                    bayNumber = bayNumber.toInt(),
+                                    additionalInfo = additionalInfo,
+                                    photoUrl = photoUrl,
+                                    documentUrl = documentUrl
+                                )
+                            }
+                            else {
+                                showWarningDialog = true
+                            }
                         }
                     },
                     buttonText = "Add",
@@ -217,8 +227,8 @@ fun AddParkingSpotScreen(
                             modifier = Modifier.padding(top = 10.dp)
                         )
                         CustomTextField(
-                            value = bayNumber,
-                            onValueChange = { bayNumber = it },
+                            value = bayNumberText,
+                            onValueChange = { bayNumberText = it },
                             label = "Number of the parking spot",
                             maxLines = 1,
                             keyboardType = KeyboardType.Number,
@@ -328,6 +338,14 @@ fun AddParkingSpotScreen(
                     }
                 }
             }
+        }
+        if (showWarningDialog) {
+            CustomAlertDialog(
+                title = "Error",
+                text = "Bay number must be an integer!",
+                onConfirm = { showWarningDialog = false },
+                onDismiss = { showWarningDialog = false }
+            )
         }
         if (showOptionsBottomSheet) {
             ImageOptionsBottomSheet(

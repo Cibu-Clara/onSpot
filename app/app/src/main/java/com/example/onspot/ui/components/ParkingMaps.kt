@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.onspot.R
 import com.example.onspot.data.model.Marker
 import com.example.onspot.ui.theme.purple
@@ -84,6 +85,7 @@ fun ParkingMapSearch(
     reservationViewModel: ReservationViewModel = viewModel(),
     placesClient: PlacesClient,
     markersList: List<Marker>,
+    navController: NavController,
     modifier: Modifier = Modifier
 ) {
     val defaultCoordinates = LatLng(46.7712, 23.6236)
@@ -280,7 +282,8 @@ fun ParkingMapSearch(
                                 showVehicleOptionsSheet = true
                             }
                         },
-                        userProfileViewModel = userProfileViewModel
+                        userProfileViewModel = userProfileViewModel,
+                        navController = navController
                     )
                     if (showVehicleOptionsSheet) {
                         val id by rememberSaveable { mutableStateOf(UUID.randomUUID().toString()) }
@@ -313,7 +316,7 @@ fun ParkingMapSearch(
                                     showDialog = true
                                 } else {
                                     scope.launch {
-                                        searchViewModel.toggleVehicleChosen(vehicleId.value)
+                                        searchViewModel.changeVehicleChosen(vehicleId.value, true)
                                         reservationViewModel.addReservation(
                                             id = id,
                                             status = "Pending",

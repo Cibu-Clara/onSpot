@@ -142,6 +142,10 @@ fun ReservationCard(
         reservationViewModel.checkAlreadyReviewed(details.reservation.uuid)
     }
 
+    LaunchedEffect(details.reservation.uuid) {
+        reservationViewModel.checkAndCompleteReservation(details.reservation)
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -289,7 +293,7 @@ fun ReservationCard(
             text = "Are you sure you want to cancel this reservation?",
             onConfirm = {
                 scope.launch {
-                    searchViewModel.toggleVehicleChosen(details.vehicle.uuid)
+                    searchViewModel.changeVehicleChosen(details.vehicle.uuid, false)
                     reservationViewModel.deleteReservation(details.reservation.uuid)
                 }
                 showCancelDialog = false

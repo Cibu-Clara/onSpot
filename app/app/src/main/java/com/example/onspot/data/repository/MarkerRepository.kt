@@ -10,4 +10,5 @@ interface MarkerRepository {
     fun getAllMarkers(): Flow<Resource<List<Marker>>>
     fun getMarkerById(markerId: String): Flow<Resource<Marker>>
     fun deleteMarkers(expiredMarkers: List<Marker>): Flow<Resource<Void?>>
+    fun deleteMarker(markerId: String): Flow<Resource<Void?>>
 }

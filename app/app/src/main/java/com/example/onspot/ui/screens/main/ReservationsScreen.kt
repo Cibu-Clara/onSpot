@@ -58,7 +58,8 @@ fun ReservationsScreen(
                 when (selectedTabIndex) {
                     0 -> {
                         ListingsTab(
-                            reservationViewModel = reservationViewModel
+                            reservationViewModel = reservationViewModel,
+                            navController = navController
                         )
                     }
                     1 -> {

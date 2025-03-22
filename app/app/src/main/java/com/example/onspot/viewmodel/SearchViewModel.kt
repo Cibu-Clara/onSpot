@@ -75,11 +75,11 @@ class SearchViewModel : ViewModel() {
         return response.place.latLng ?: LatLng(0.0, 0.0)
     }
 
-    fun toggleVehicleChosen(vehicleId: String) = viewModelScope.launch {
-        vehicleRepository.toggleVehicleChosen(vehicleId).collect { result ->
+    fun changeVehicleChosen(vehicleId: String, chosen: Boolean) = viewModelScope.launch {
+        vehicleRepository.changeVehicleChosen(vehicleId, chosen).collect { result ->
             when(result) {
                 is Resource.Loading -> { _toggleVehicleChosenState.send(ToggleVehicleChosenState(isLoading = true)) }
-                is Resource.Success -> { _toggleVehicleChosenState.send(ToggleVehicleChosenState(isSuccess = "Vehicle chosen status successfully toggled")) }
+                is Resource.Success -> { _toggleVehicleChosenState.send(ToggleVehicleChosenState(isSuccess = "Vehicle chosen status successfully changed")) }
                 is Resource.Error -> { _toggleVehicleChosenState.send(ToggleVehicleChosenState(isError = result.message)) }
             }
         }

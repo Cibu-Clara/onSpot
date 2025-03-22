@@ -60,7 +60,6 @@ class MarkerRepositoryImpl : MarkerRepository {
         emit(Resource.Error(e.message ?: "Failed to fetch marker details"))
     }
 
-
     override fun deleteMarkers(expiredMarkers: List<Marker>): Flow<Resource<Void?>> = flow {
         try {
             emit(Resource.Loading())
@@ -70,6 +69,20 @@ class MarkerRepositoryImpl : MarkerRepository {
             emit(Resource.Success(null))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Failed to delete markers"))
+        }
+    }
+
+    override fun deleteMarker(markerId: String): Flow<Resource<Void?>> = flow {
+        try {
+            emit(Resource.Loading())
+
+            markersCollection
+                .document(markerId)
+                .delete()
+                .await()
+            emit(Resource.Success(null))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Failed to delete marker"))
         }
     }
 }
